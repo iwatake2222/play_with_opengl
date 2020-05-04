@@ -1,6 +1,6 @@
 # Play with OpenGL (GLFW)
 ## Projects
-- basic_01_GLFW_only
+- basic_01_blank
 - basic_02_shader_cube_control
 - basic_03_object
 
@@ -10,7 +10,7 @@ cd play_with_opengl
 git submodule init
 git submodule update
 
-cd basic_01_GLFW_only
+cd basic_02_shader_cube_control
 mkdir build && cd build
 cmake ..
 make

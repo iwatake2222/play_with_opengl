@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	RUN_CHECK(window = glfwCreateWindow(1024, 768, "Tutorial 01", NULL, NULL));
+	RUN_CHECK(window = glfwCreateWindow(720, 480, "main", NULL, NULL));
 	glfwMakeContextCurrent(window);
 
 	/* Initialize GLEW */
