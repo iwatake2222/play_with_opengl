@@ -49,13 +49,14 @@ void BackgroundDrawer_init(int width, int height)
 	};
 
 	static const GLfloat uvBufferFullScreen[] = {
-		0.0f,  0.0f,
+		/* upside down */
 		0.0f,  1.0f,
+		1.0f,  1.0f,
 		1.0f,  0.0f,
 
-		1.0f,  0.0f,
-		1.0f,  1.0f,
 		0.0f,  1.0f,
+		1.0f,  0.0f,
+		0.0f,  0.0f,
 	};
 
 	glGenBuffers(1, &s_vertexBuffer);
