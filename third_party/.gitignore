@@ -1,1 +1,2 @@
-glew.pc
+glew/glew.pc
+!glew/build
