@@ -79,8 +79,8 @@ int main(int argc, char *argv[])
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec2> uvs;
 	std::vector<glm::vec3> normals;
-	bool res = loadAssImp("resource/suzanne.obj", indices, vertices, uvs, normals);
-	//bool res = loadOBJ("resource/suzanne.obj", vertices, uvs, normals);
+	RUN_CHECK(loadAssImp("resource/cube.obj", indices, vertices, uvs, normals));
+	//RUN_CHECK(loadOBJ("resource/suzanne.obj", vertices, uvs, normals));
 
 	/* Create Vertex Array Object */
 	GLuint vao;
@@ -97,12 +97,14 @@ int main(int argc, char *argv[])
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
 	GLuint uvBuffer;
-	glGenBuffers(1, &uvBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
-	glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0], GL_STATIC_DRAW);
-	glEnableVertexAttribArray(1);
-	glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	if (uvs.size() > 0) {
+		glGenBuffers(1, &uvBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
+		glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0], GL_STATIC_DRAW);
+		glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	}
 
 	/* Bind Texture */
 	glActiveTexture(GL_TEXTURE0);
@@ -124,8 +126,8 @@ int main(int argc, char *argv[])
 
 		/* Model matrix */
 		glm::mat4 Model = glm::mat4(1.0f);
-		static float rotX = 0.0f;
-		glm::mat4 myRotationAxis = glm::rotate(rotX++ / (2 * 3.14f), glm::vec3(1, 0, 0));
+		static float rotY = 0.0f;
+		glm::mat4 myRotationAxis = glm::rotate(rotY++ / (2 * 3.14f), glm::vec3(0, 1, 0));
 		Model = myRotationAxis * Model;
 
 		/* Calculate ModelViewProjection matrix and send it to shader */

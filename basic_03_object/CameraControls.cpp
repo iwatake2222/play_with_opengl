@@ -99,7 +99,7 @@ void CameraControls_initialize(GLFWwindow* window, glm::vec3 position, float hor
 
 glm::mat4 CameraControls_getProjectionMatrix()
 {
-	glm::mat4 ProjectionMatrix = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
+	glm::mat4 ProjectionMatrix = glm::perspective(45.0f, 3.0f / 2.0f, 0.1f, 100.0f);
 	//glm::mat4 ProjectionMatrix = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.0f, 100.0f); // In world coordinates
 	return ProjectionMatrix;
 }

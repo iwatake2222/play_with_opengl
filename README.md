@@ -35,3 +35,12 @@ make
 - Some code and materials are retrieved from:
 	- https://www.opengl-tutorial.org/
 
+### Model
+- resource/miku_Ver17.02.pmx
+	- https://piapro.jp/t/0Hwp
+	- 初音ミク_muuubu_202005042213.zip
+	- む～ぶさん
+- nendomiku_ver3_00.pmx
+	- https://piapro.jp/t/wyAD
+	- ねんどミクさん_maebari_202005042218.zip
+	- maebariさん
