@@ -31,9 +31,13 @@ make
 	- https://github.com/assimp/assimp.git
 	- as git submodule (version is v5.0.1)
 
-### Code
+### Code and other software stuffs
 - Some code and materials are retrieved from:
 	- https://www.opengl-tutorial.org/
+
+- resource/rpalm.xml
+	- Hand detection (Haar cascade)
+	- https://github.com/Sandeep-Sthapit/HandGestureDetection
 
 ### Model
 - resource/miku_Ver17.02.pmx

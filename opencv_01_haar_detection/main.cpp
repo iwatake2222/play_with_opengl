@@ -33,8 +33,9 @@
 /* Settings */
 #define WINDOW_WIDTH  1280
 #define WINDOW_HEIGHT  720
-#define HAAR_FILENAME "resource/haarcascade_frontalface_alt.xml"
 #define OBJECT_NUM 2
+//#define HAAR_FILENAME "resource/haarcascade_frontalface_alt.xml"
+#define HAAR_FILENAME "resource/rpalm.xml"
 
 /*** Global variables ***/
 
@@ -153,19 +154,28 @@ int main(int argc, char *argv[])
 		/* Clear the screen */
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		/* Capture camera image and set it as background */
+		/* Capture camera image */
 		cv::Mat capImage;
 		cap.read(capImage);
 
 		/* Detect objects */
 		cv::Mat imageGray;
-		cvtColor(capImage, imageGray, cv::COLOR_BGR2GRAY);
-		cv::equalizeHist(imageGray, imageGray);
-		std::vector<cv::Rect> listObject;
-		cascade.detectMultiScale(imageGray, listObject);
-		for (size_t i = 0; i < listObject.size(); i++) {
-			cv::rectangle(capImage, listObject[i], cv::Scalar(255, 0, 0));
+		//cvtColor(capImage, imageGray, cv::COLOR_BGR2GRAY);
+		//cv::equalizeHist(imageGray, imageGray);
+		std::vector<cv::Rect> listDet;
+		cascade.detectMultiScale(capImage, listDet, 1.1, 5, cv::CASCADE_SCALE_IMAGE | cv::CASCADE_FIND_BIGGEST_OBJECT, cv::Size(30, 30));
+		static double s_lastDetTime = glfwGetTime();
+		for (size_t i = 0; i < listDet.size(); i++) {
+			cv::rectangle(capImage, listDet[i], cv::Scalar(255, 0, 0));
+			s_lastDetTime = glfwGetTime();
 		}
+		if (glfwGetTime() - s_lastDetTime > 2 && s_lastDetTime != -1) {
+			/* switch object */
+			indexObject = (indexObject + 1) % OBJECT_NUM;
+			s_lastDetTime = -1;	// -1 means already switched, but not displayed yet
+		}
+
+		/* Draw background */
 		//cv::cvtColor(capImage, capImage, cv::COLOR_BGR2RGB);
 		cv::resize(capImage, capImage, cv::Size(WINDOW_WIDTH, WINDOW_HEIGHT));
 		BackgroundDrawer_draw(WINDOW_WIDTH, WINDOW_HEIGHT, capImage.data);
@@ -184,19 +194,18 @@ int main(int argc, char *argv[])
 		glm::mat4 matModelRot = glm::rotate(rotY / (2 * 3.14f), glm::vec3(0, 1, 0));
 		glm::mat4 matModelScaling = glm::scale(glm::vec3(1.0f, 1.0f, 1.0f));
 		glm::mat4 matModelTranslate = glm::translate(glm::vec3(0.0f, 0.0f, 0.0f));
-		if (listObject.size() > 0) {
+		if (listDet.size() > 0) {
 			/* mode to the center of bounding box, and resize to the same size as bbox.height */
-			float x = (listObject[0].x + listObject[0].width / 2 - WINDOW_WIDTH / 2.0f) / (WINDOW_WIDTH / 2);
-			float y = (listObject[0].y + listObject[0].height / 2 - WINDOW_HEIGHT / 2.0f) / (WINDOW_HEIGHT / 2);
+			float x = (listDet[0].x + listDet[0].width / 2 - WINDOW_WIDTH / 2.0f) / (WINDOW_WIDTH / 2);
+			float y = (listDet[0].y + listDet[0].height / 2 - WINDOW_HEIGHT / 2.0f) / (WINDOW_HEIGHT / 2);
 			matModelTranslate = glm::translate(glm::vec3(x, -y, 0.0f));
-			float scale = (float)listObject[0].height / WINDOW_HEIGHT;	// scale against to window size
+			float scale = (float)listDet[0].height / WINDOW_HEIGHT;	// scale against to window size
+			scale *= 0.75;	// adjustment
 			scale *= objectDefaultScale[indexObject];
 			matModelScaling = glm::scale(glm::vec3(scale, scale, scale));
 		} else {
 			/* don't display */
 			matModelScaling = glm::scale(glm::vec3(0.0, 0.0, 0.0));
-			/* switch object */
-			indexObject = (indexObject + 1) % OBJECT_NUM;
 		}
 		Model = matModelTranslate * matModelRot * matModelScaling * Model;
 
