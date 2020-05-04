@@ -95,12 +95,14 @@ if (MSVC)
   # add options from visual studio project
   target_compile_definitions (glew PRIVATE "GLEW_BUILD;VC_EXTRALEAN")
   target_compile_definitions (glew_s PRIVATE "GLEW_STATIC;VC_EXTRALEAN")
-  target_link_libraries (glew LINK_PRIVATE -BASE:0x62AA0000)
+  # https://github.com/nigels-com/glew/issues/99
+  # target_link_libraries (glew LINK_PRIVATE -BASE:0x62AA0000)
   # kill security checks which are dependent on stdlib
   target_compile_options (glew PRIVATE -GS-)
   target_compile_options (glew_s PRIVATE -GS-)
   # remove stdlib dependency
-  target_link_libraries (glew LINK_PRIVATE -nodefaultlib -noentry)
+  # https://github.com/nigels-com/glew/issues/99
+  # target_link_libraries (glew LINK_PRIVATE -nodefaultlib -noentry)
 elseif (WIN32 AND ((CMAKE_C_COMPILER_ID MATCHES "GNU") OR (CMAKE_C_COMPILER_ID MATCHES "Clang")))
   # remove stdlib dependency on windows with GCC and Clang (for similar reasons
   # as to MSVC - to allow it to be used with any Windows compiler)
