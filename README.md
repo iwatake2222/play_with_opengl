@@ -6,6 +6,7 @@
 
 ## How to build a project
 ```
+# sudo apt-get install libglu1-mesa-dev mesa-common-dev
 cd play_with_opengl
 git submodule init
 git submodule update
@@ -18,7 +19,7 @@ make
 
 ## Acknowledgements
 ### External libraries
-- third_party/fw
+- third_party/glfw
 	- https://github.com/glfw/glfw.git
 	- as git submodule (version is 3.3.2)
 - third_party/glew
@@ -26,8 +27,11 @@ make
 - third_party/glm
 	- https://github.com/g-truc/glm.git
 	- as git submodule (version is 0.9.9.8)
+- third_party/assimp
+	- https://github.com/assimp/assimp.git
+	- as git submodule (version is v5.0.1)
 
 ### Code
-- Some code is retrieved from:
+- Some code and materials are retrieved from:
 	- https://www.opengl-tutorial.org/
 
