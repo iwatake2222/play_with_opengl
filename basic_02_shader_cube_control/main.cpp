@@ -72,6 +72,7 @@ int main(int argc, char *argv[])
 	/* Create Vertex Array Object */
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
 
 	/* Create Vertex Buffer Object and copy data */
 	GLuint vertexBuffer;
@@ -84,20 +85,6 @@ int main(int argc, char *argv[])
 	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data), g_color_buffer_data, GL_STATIC_DRAW);
 
-	/* Set attribute buffer: vertex */
-	glBindVertexArray(vao);
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-	glBindVertexArray(0);
-
-	/* Set attribute buffer: color */
-	glBindVertexArray(vao);
-	glEnableVertexAttribArray(1);
-	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-	glBindVertexArray(0);
-
 	/* Initialize camera matrix controls (Initial position : on +Z, toward -Z) */
 	CameraControls_initialize(window, glm::vec3(0, 0, 5), 3.14f, 0.0f);
 
@@ -106,6 +93,7 @@ int main(int argc, char *argv[])
 		/* Clear the screen */
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		glUseProgram(programId);
 		/* Camera matrix */
 		CameraControls_update(window);
 		glm::mat4 Projection = CameraControls_getProjectionMatrix();
@@ -119,13 +107,21 @@ int main(int argc, char *argv[])
 
 		/* Calculate ModelViewProjection matrix and send it to shader */
 		glm::mat4 MVP = Projection * View * Model;
-		glUseProgram(programId);
 		glUniformMatrix4fv(matrixId, 1, GL_FALSE, &MVP[0][0]);
 
+		/* Set attribute buffer */
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+		glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
 		/* Draw the triangle */
-		glBindVertexArray(vao);
 		glDrawArrays(GL_TRIANGLES, 0, sizeof(g_vertex_buffer_data) / sizeof(float) / 3);
-		glBindVertexArray(0);
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
 		glUseProgram(0);
 
 		/* Swap buffers */

@@ -87,29 +87,18 @@ int main(int argc, char *argv[])
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 
-	/* Create Vertex Buffer Object and copy data, then set attribute buffer */
+	/* Create Vertex Buffer Object and copy data */
 	GLuint vertexBuffer;
 	glGenBuffers(1, &vertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
 	GLuint uvBuffer;
 	if (uvs.size() > 0) {
 		glGenBuffers(1, &uvBuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
 		glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0], GL_STATIC_DRAW);
-		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	}
-
-	/* Bind Texture */
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glUniform1i(textureId, 0);
 
 	/* Initialize camera matrix controls (Initial position : on +Z, toward -Z) */
 	CameraControls_initialize(window, glm::vec3(0, 0, 5), 3.14f, 0.0f);
@@ -119,6 +108,7 @@ int main(int argc, char *argv[])
 		/* Clear the screen */
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		glUseProgram(programId);
 		/* Camera matrix */
 		CameraControls_update(window);
 		glm::mat4 Projection = CameraControls_getProjectionMatrix();
@@ -132,11 +122,26 @@ int main(int argc, char *argv[])
 
 		/* Calculate ModelViewProjection matrix and send it to shader */
 		glm::mat4 MVP = Projection * View * Model;
-		glUseProgram(programId);
 		glUniformMatrix4fv(matrixId, 1, GL_FALSE, &MVP[0][0]);
+
+		/* Bind Texture */
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glUniform1i(textureId, 0);
+
+		/* Set attribute buffer */
+		glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
 		/* Draw the triangle */
 		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
 		glUseProgram(0);
 
 		/* Swap buffers */
@@ -150,9 +155,6 @@ int main(int argc, char *argv[])
 	}
 
 	/*** Finalize ***/
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
-
 	/* Cleanup VBO and shader */
 	glDeleteBuffers(1, &vertexBuffer);
 	glDeleteBuffers(1, &uvBuffer);
