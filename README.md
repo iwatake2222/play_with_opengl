@@ -12,6 +12,8 @@
 	- Application: Display 3D model on detected hand
 	- OpenCV is needed
 
+![demo_opencv_01_haar_detection](00_doc/demo_opencv_01_haar_detection.gif "demo_opencv_01_haar_detection.gif")
+
 ## How to build a project
 ```
 # sudo apt-get install libglu1-mesa-dev mesa-common-dev
@@ -19,10 +21,14 @@ cd play_with_opengl
 git submodule init
 git submodule update
 
+# For Linux (not tested yet)
 cd basic_02_shader_cube_control
 mkdir build && cd build
 cmake ..
 make
+
+# For Windows (MSVC)
+# Create MSVC project using cmake-gui
 ```
 
 ## Acknowledgements
