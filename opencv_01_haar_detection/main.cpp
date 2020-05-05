@@ -77,12 +77,13 @@ int main(int argc, char *argv[])
 	/*** Initialize ***/
 	/* Initialize camera (OpenCV) */
 	static cv::VideoCapture cap;
-	cap = cv::VideoCapture(1);
+	cap = cv::VideoCapture(0);
 	cap.set(cv::CAP_PROP_FRAME_WIDTH, WINDOW_WIDTH);
 	cap.set(cv::CAP_PROP_FRAME_HEIGHT, WINDOW_HEIGHT);
 	// cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('B', 'G', 'R', '3'));
 	cap.set(cv::CAP_PROP_BUFFERSIZE, 1);
 	
+	/* Initialize cascade (OpenCV) */
 	cv::CascadeClassifier cascade;
 	cascade.load(HAAR_FILENAME);
 

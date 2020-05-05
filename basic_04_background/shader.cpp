@@ -2,9 +2,11 @@
 /* for general */
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <string>
 #include <fstream> 
 #include <vector>
-#include <string>
 #include <chrono>
 
 /* for GLFW */
