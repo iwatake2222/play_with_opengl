@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
 		//cvtColor(capImage, imageGray, cv::COLOR_BGR2GRAY);
 		//cv::equalizeHist(imageGray, imageGray);
 		std::vector<cv::Rect> listDet;
-		cascade.detectMultiScale(capImage, listDet, 1.1, 5, cv::CASCADE_SCALE_IMAGE | cv::CASCADE_FIND_BIGGEST_OBJECT, cv::Size(30, 30));
+		cascade.detectMultiScale(capImage, listDet, 1.1, 8, cv::CASCADE_SCALE_IMAGE , cv::Size(30, 30));
 		static double s_lastDetTime = glfwGetTime();
 		for (size_t i = 0; i < listDet.size(); i++) {
 			cv::rectangle(capImage, listDet[i], cv::Scalar(255, 0, 0));
@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
 		/* Model matrix (move and resize using detection result, and always rotation) */
 		glm::mat4 Model = glm::mat4(1.0f);
 		static float rotY = 0.0f;
-		rotY += 0.5f;
+		rotY += 0.8f;
 		glm::mat4 matModelRot = glm::rotate(rotY / (2 * 3.14f), glm::vec3(0, 1, 0));
 		glm::mat4 matModelScaling = glm::scale(glm::vec3(1.0f, 1.0f, 1.0f));
 		glm::mat4 matModelTranslate = glm::translate(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -226,7 +226,7 @@ int main(int argc, char *argv[])
 		glEnableVertexAttribArray(1);
 		glBindBuffer(GL_ARRAY_BUFFER, uvBuffer[indexObject]);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
+		
 		/* Draw the triangle */
 		glDrawArrays(GL_LINE_LOOP, 0, partCount[indexObject]);
 		glDisableVertexAttribArray(0);
