@@ -1,8 +1,16 @@
 # Play with OpenGL (GLFW)
 ## Projects
 - basic_01_blank
+	- Tutorial: Blank window
 - basic_02_shader_cube_control
+	- Tutorial: Display cube using GLSL and keyboard/mouse control
 - basic_03_object
+	- Tutorial: Load model file
+- basic_04_background
+	- Test: Draw 2D background
+- opencv_01_haar_detection
+	- Application: Display 3D model on detected hand
+	- OpenCV is needed
 
 ## How to build a project
 ```
