@@ -1,14 +1,14 @@
 /*** Include ***/
 /* for general */
-#include <stdint.h>
-#include <stdio.h>
+#include <cstdint>
+#include <cstdio>
 #include <fstream> 
 #include <vector>
 #include <string>
-#include <chrono>
+#include <memory>
 
 /* for GLFW */
-#include <GL/glew.h>
+#include <GL/glew.h>     /* this must be before including glfw*/
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp> 
@@ -31,22 +31,196 @@
 
 
 /*** Function ***/
-int main(int argc, char *argv[])
+class MyWorld
 {
-    /*** Initialize ***/
-    GLFWwindow* window;
+private:
+public:
+    MyWorld();
+    ~MyWorld();
+    bool RunFrame();
+private:
+    GLFWwindow* window_;
+    GLuint program_id_;
+public:
+};
 
+
+
+MyWorld::MyWorld()
+{
     /* Initialize GLFW */
     RUN_CHECK(glfwInit() == GL_TRUE);
+    std::atexit(glfwTerminate);
 
     /* Create a window (x4 anti-aliasing, OpenGL3.3 Core Profile)*/
     glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    RUN_CHECK(window_ = glfwCreateWindow(720, 480, "MyWorld", NULL, NULL));
+    glfwMakeContextCurrent(window_);
+    
+    /* Initialize GLEW. This must be after initializing GLFW, creating window and setting current context window */
+    glewExperimental = true;
+    RUN_CHECK(glewInit() == GLEW_OK);
+
+    /* swap buffer at vsync */
+    glfwSwapInterval(1);
+
+
+    static const GLchar vsrc[] =
+        "#version 330 core\n"
+        "in vec4 position;\n"
+        "void main()\n"
+        "{\n"
+        " gl_Position = position;\n"
+        "}";
+    static constexpr GLchar fsrc[] =
+        "#version 330 core\n"
+        "out vec4 fragment;\n"
+        "void main()\n"
+        "{\n"
+        " fragment = vec4(1.0, 0.0, 0.0, 1.0);\n"
+        "}\n";
+    program_id_ = CreateShaderProgram(vsrc, fsrc);
+    glBindAttribLocation(program_id_, 0, "position");
+    glBindFragDataLocation(program_id_, 0, "fragment");
+}
+
+MyWorld::~MyWorld()
+{
+    
+}
+
+
+
+
+class Object
+{
+public:
+    struct Vertex
+    {
+        GLfloat position[2];
+    };
+public:
+    Object(GLuint attr_index, GLint elem_size, GLsizei vertex_num, const Vertex* vertex);
+    virtual ~Object();
+    void Bind() const;
+private:
+    Object(const Object& object);   // not allowed
+    Object& operator=(const Object& object);    // not allowed
+private:
+    GLuint vao_;
+    GLuint vbo_;
+};
+
+Object::Object(GLuint attr_index, GLint elem_size, GLsizei vertex_num, const Vertex* vertex)
+{
+    glGenVertexArrays(1, &vao_);
+    glBindVertexArray(vao_);
+    glGenBuffers(1, &vbo_);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_);
+    glBufferData(GL_ARRAY_BUFFER, vertex_num * sizeof(Vertex), vertex, GL_STATIC_DRAW);
+    glVertexAttribPointer(attr_index, elem_size, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(attr_index);
+}
+
+Object::~Object()
+{
+    glDeleteVertexArrays(1, &vao_);
+    glDeleteBuffers(1, &vbo_);
+}
+
+void Object::Bind() const
+{
+    glBindVertexArray(vao_);
+}
+
+
+class Shape
+{
+public:
+    Shape(GLuint attr_index, GLint elem_size, GLsizei vertex_num, const Object::Vertex* vertex);
+    void Draw() const;
+private:
+    virtual void Execute() const;
+
+protected:
+    const GLsizei vertex_num_;
+private:
+    std::shared_ptr<const Object> object_;
+};
+
+Shape::Shape(GLuint attr_index, GLint elem_size, GLsizei vertex_num, const Object::Vertex* vertex)
+    : object_(new Object(attr_index, elem_size, vertex_num, vertex)), vertex_num_(vertex_num)
+{
+    //
+}
+
+void Shape::Draw() const
+{
+    object_->Bind();
+    Execute();
+}
+
+void Shape::Execute() const
+{
+    glDrawArrays(GL_LINE_LOOP, 0, vertex_num_);
+}
+
+
+constexpr Object::Vertex rectangleVertex[] =
+{
+    { -0.5f, -0.5f },
+    { 0.5f, -0.5f },
+    { 0.5f, 0.5f },
+    { -0.5f, 0.5f }
+};
+
+bool MyWorld::RunFrame()
+{
+    if (!window_) return false;
+    if (glfwWindowShouldClose(window_) == GL_TRUE) {
+        glfwDestroyWindow(window_);
+        window_ = nullptr;
+        return false;
+    }
+    glfwMakeContextCurrent(window_);
+    glClearColor(0.5f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glUseProgram(program_id_);
+
+    std::unique_ptr<const Shape> shape(new Shape(0, 2, 4, rectangleVertex));
+
+    shape->Draw();
+
+
+    glfwSwapBuffers(window_);
+    //glfwWaitEvents();
+    glfwPollEvents();
+
+    return true;
+}
+
+int main(int argc, char *argv[])
+{
+    MyWorld my_world;
+    
+    /*** Initialize ***/
+    /* Initialize GLFW */
+    RUN_CHECK(glfwInit() == GL_TRUE);
+    
+
+    /* Create a window (x4 anti-aliasing, OpenGL3.3 Core Profile)*/
+    GLFWwindow* window;
+    glfwWindowHint(GLFW_SAMPLES, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     RUN_CHECK(window = glfwCreateWindow(720, 480, "main", NULL, NULL));
     glfwMakeContextCurrent(window);
-
+    
     /* Initialize GLEW */
     glewExperimental = true;
     RUN_CHECK(glewInit() == GLEW_OK);
@@ -66,7 +240,7 @@ int main(int argc, char *argv[])
     glEnable(GL_CULL_FACE);
 
     /* Load shader */
-    GLuint programId = LoadShaders("resource/SimpleVertexShader.vertexshader", "resource/SimpleFragmentShader.fragmentshader");
+    GLuint programId = LoadShaderProgram("resource/SimpleVertexShader.vertexshader", "resource/SimpleFragmentShader.fragmentshader");
     GLuint matrixId = glGetUniformLocation(programId, "MVP");
 
     /* Create Vertex Array Object */
@@ -90,6 +264,9 @@ int main(int argc, char *argv[])
 
     /*** Start loop ***/
     while(1) {
+        my_world.RunFrame();
+
+        glfwMakeContextCurrent(window);
         /* Clear the screen */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
