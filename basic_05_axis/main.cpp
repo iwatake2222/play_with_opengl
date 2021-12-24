@@ -31,70 +31,6 @@
 
 
 /*** Function ***/
-class MyWorld
-{
-private:
-public:
-    MyWorld();
-    ~MyWorld();
-    bool RunFrame();
-private:
-    GLFWwindow* window_;
-    GLuint program_id_;
-public:
-};
-
-
-
-MyWorld::MyWorld()
-{
-    /* Initialize GLFW */
-    RUN_CHECK(glfwInit() == GL_TRUE);
-    std::atexit(glfwTerminate);
-
-    /* Create a window (x4 anti-aliasing, OpenGL3.3 Core Profile)*/
-    glfwWindowHint(GLFW_SAMPLES, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    RUN_CHECK(window_ = glfwCreateWindow(720, 480, "MyWorld", NULL, NULL));
-    glfwMakeContextCurrent(window_);
-    
-    /* Initialize GLEW. This must be after initializing GLFW, creating window and setting current context window */
-    glewExperimental = true;
-    RUN_CHECK(glewInit() == GLEW_OK);
-
-    /* swap buffer at vsync */
-    glfwSwapInterval(1);
-
-
-    static const GLchar vsrc[] =
-        "#version 330 core\n"
-        "in vec4 position;\n"
-        "void main()\n"
-        "{\n"
-        " gl_Position = position;\n"
-        "}";
-    static constexpr GLchar fsrc[] =
-        "#version 330 core\n"
-        "out vec4 fragment;\n"
-        "void main()\n"
-        "{\n"
-        " fragment = vec4(1.0, 0.0, 0.0, 1.0);\n"
-        "}\n";
-    program_id_ = CreateShaderProgram(vsrc, fsrc);
-    glBindAttribLocation(program_id_, 0, "position");
-    glBindFragDataLocation(program_id_, 0, "fragment");
-}
-
-MyWorld::~MyWorld()
-{
-    
-}
-
-
-
-
 class Object
 {
 public:
@@ -146,6 +82,7 @@ private:
     virtual void Execute() const;
 
 protected:
+    
     const GLsizei vertex_num_;
 private:
     std::shared_ptr<const Object> object_;
@@ -177,7 +114,123 @@ constexpr Object::Vertex rectangleVertex[] =
     { -0.5f, 0.5f }
 };
 
-bool MyWorld::RunFrame()
+class Window
+{
+private:
+    static void CbResize(GLFWwindow* const window, int32_t width, int32_t height);
+    static void CbWheel(GLFWwindow* window, double x, double y);
+public:
+    Window(int32_t width = 720, int32_t height = 480, const char* title = "test");
+    ~Window();
+    bool RunFrame();
+    float GetAspect() const { return static_cast<float>(width_) / height_; }
+private:
+    GLFWwindow* window_;
+    float scale_;
+    int32_t width_;
+    int32_t height_;
+    GLuint program_id_;
+    GLint size_loc_;
+    GLint scale_loc_;
+    GLint location_loc_;
+    std::unique_ptr<Shape> shape_;
+    float location_x_;
+    float location_y_;
+    
+public:
+};
+
+void Window::CbResize(GLFWwindow* const window, int32_t width, int32_t height)
+{
+    int32_t fb_width, fb_height;
+    glfwGetFramebufferSize(window, &fb_width, &fb_height);
+    glViewport(0, 0, fb_width, fb_height);
+
+
+    Window* const instance = static_cast<Window*>(glfwGetWindowUserPointer(window));
+    if (instance) {
+        instance->width_ = width;
+        instance->height_ = height;
+    }
+}
+
+void Window::CbWheel(GLFWwindow* window, double x, double y)
+{
+    Window* const instance = static_cast<Window*>(glfwGetWindowUserPointer(window));
+    if (instance) {
+        instance->scale_ += y;
+    }
+}
+
+
+Window::Window(int32_t width, int32_t height, const char* title)
+{
+    scale_ = 100.0f;
+    location_x_ = location_y_ = 0.0f;
+
+    /* Create a window (x4 anti-aliasing, OpenGL3.3 Core Profile)*/
+    glfwWindowHint(GLFW_SAMPLES, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    RUN_CHECK(window_ = glfwCreateWindow(width, height, title, NULL, NULL));
+    glfwMakeContextCurrent(window_);
+
+    /* Initialize GLEW. This must be after initializing GLFW, creating window and setting current context window */
+    glewExperimental = true;
+    RUN_CHECK(glewInit() == GLEW_OK);
+
+    /* Sync buffer swap timing with vsync */
+    glfwSwapInterval(1);
+
+    /* Store this pointer to window */
+    glfwSetWindowUserPointer(window_, this);
+
+    /* Ensure not to miss input */
+    glfwSetInputMode(window_, GLFW_STICKY_KEYS, GL_TRUE);
+    glfwSetInputMode(window_, GLFW_STICKY_MOUSE_BUTTONS, GL_TRUE);
+
+    /* Set callback */
+    glfwSetWindowSizeCallback(window_, CbResize);
+    CbResize(window_, width, height);
+
+    glfwSetScrollCallback(window_, CbWheel);
+
+    /* Load Shader Program */
+    static const GLchar vsrc[] =
+        "#version 150 core\n"
+        "uniform vec2 size;\n"
+        "uniform float scale;\n"
+        "uniform vec2 location;\n"
+        "in vec4 position;\n"
+        "void main()\n"
+        "{\n"
+        " gl_Position = vec4(2.0 * scale / size, 1.0, 1.0) * position + vec4(location, 0.0, 0.0);\n"
+        "}";
+    static constexpr GLchar fsrc[] =
+        "#version 150 core\n"
+        "out vec4 fragment;\n"
+        "void main()\n"
+        "{\n"
+        " fragment = vec4(1.0, 0.0, 0.0, 1.0);\n"
+        "}\n";
+    program_id_ = CreateShaderProgram(vsrc, fsrc);
+    int32_t position_loc = glGetAttribLocation(program_id_, "position");
+    size_loc_ = glGetUniformLocation(program_id_, "size");
+    scale_loc_ = glGetUniformLocation(program_id_, "scale");
+    location_loc_ = glGetUniformLocation(program_id_, "location");
+    
+    /* Create shape */
+    shape_ = std::make_unique<Shape>(position_loc, 2, 4, rectangleVertex);
+}
+
+Window::~Window()
+{
+    glfwDestroyWindow(window_);
+}
+
+
+bool Window::RunFrame()
 {
     if (!window_) return false;
     if (glfwWindowShouldClose(window_) == GL_TRUE) {
@@ -185,31 +238,65 @@ bool MyWorld::RunFrame()
         window_ = nullptr;
         return false;
     }
+    if (glfwGetKey(window_, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        return false;
+    }
     glfwMakeContextCurrent(window_);
+
+    glfwPollEvents();
+    if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_1) != GLFW_RELEASE) {
+        double x, y;
+        glfwGetCursorPos(window_, &x, &y);
+        location_x_ = x * 2.0f / width_ - 1.0f;
+        location_y_ = 1.0f - y * 2.0f / height_;
+        //printf("%f %f\n", location_x_, location_y_);
+    }
+    if (glfwGetKey(window_, GLFW_KEY_LEFT) != GLFW_RELEASE) {
+        location_x_ -= 2.0f / width_;
+    } else if (glfwGetKey(window_, GLFW_KEY_RIGHT) != GLFW_RELEASE) {
+        location_x_ += 2.0f / width_;
+    }
+    if (glfwGetKey(window_, GLFW_KEY_DOWN) != GLFW_RELEASE) {
+        location_y_ -= 2.0f / height_;
+    } else if (glfwGetKey(window_, GLFW_KEY_UP) != GLFW_RELEASE) {
+        location_y_ += 2.0f / height_;
+    }
+    
+
     glClearColor(0.5f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    
+
     glUseProgram(program_id_);
-
-    std::unique_ptr<const Shape> shape(new Shape(0, 2, 4, rectangleVertex));
-
-    shape->Draw();
+    GLfloat size[2] = { width_, height_ };
+    GLfloat location[2] = { location_x_, location_y_ };
+    glUniform2fv(size_loc_, 1, size);
+    glUniform1f(scale_loc_, scale_);
+    glUniform2fv(location_loc_, 1, location);
+    shape_->Draw();
 
 
     glfwSwapBuffers(window_);
-    //glfwWaitEvents();
-    glfwPollEvents();
 
     return true;
 }
 
 int main(int argc, char *argv[])
 {
-    MyWorld my_world;
-    
     /*** Initialize ***/
     /* Initialize GLFW */
     RUN_CHECK(glfwInit() == GL_TRUE);
+    std::atexit(glfwTerminate);
+
+    Window my_window;
+
+    /*** Start loop ***/
+    while (1) {
+        if (my_window.RunFrame() == false) break;
+    }
+
+    return 0;
     
 
     /* Create a window (x4 anti-aliasing, OpenGL3.3 Core Profile)*/
@@ -264,7 +351,7 @@ int main(int argc, char *argv[])
 
     /*** Start loop ***/
     while(1) {
-        my_world.RunFrame();
+        my_window.RunFrame();
 
         glfwMakeContextCurrent(window);
         /* Clear the screen */
