@@ -113,4 +113,3 @@ GLuint LoadShaderProgram(const char* vertex_shader_path, const char* fragment_sh
     /* Craete program */
     return CreateShaderProgram(vertex_shader_code.c_str(), fragment_shader_code.c_str());
 }
-

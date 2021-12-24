@@ -21,12 +21,9 @@ endif()
 # Create executable file
 add_executable(${ProjectName}
     main.cpp
-    shader.cpp
-    shader.h
-    camera_control.cpp
-    camera_control.h
-    data.cpp
-    data.h
+    shader.h shader.cpp
+    matrix.h
+    transform.h transform.cpp
 )
 
 # For OpenGL and GLFW

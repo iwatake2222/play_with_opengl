@@ -14,233 +14,26 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp> 
 
+#include "matrix.h"
+#include "transform.h"
 #include "shader.h"
-#include "camera_control.h"
-#include "data.h"
 
 /*** Macro ***/
-/* macro functions */
+/* macro function */
 #define RUN_CHECK(x)                                         \
   if (!(x)) {                                                \
     fprintf(stderr, "Error at %s:%d\n", __FILE__, __LINE__); \
     exit(1);                                                 \
   }
 
-/* Settings */
+/* Setting */
 
-/*** Global variables ***/
+/*** Global variable ***/
 
 
 /*** Function ***/
-class Matrix
-{
-public:
-    Matrix()
-    {
-        std::fill(matrix, matrix + 16, 0.0f);
-    }
-    Matrix(const float* a)
-    {
-        std::copy(a, a + 16, matrix);
-    }
-    ~Matrix() {}
-    const float& operator[](std::size_t i) const
-    {
-        return matrix[i];
-    }
-    float& operator[](std::size_t i)
-    {
-        return matrix[i];
-    }
-    Matrix operator*(const Matrix& m) const
-    {
-        Matrix t;
-        for (int32_t j = 0; j < 4; j++) {
-            for (int32_t i = 0; i < 4; i++) {
-                const int32_t index = 4 * j + i;
-                t[index] = 0.0f;
-                for (int32_t k = 0; k < 4; k++) {
-                    t[index] += matrix[k * 4 + i] * m[j * 4 + k];
-                }
-            }
-        }
-        return t;
-    }
-    const float* data() const
-    {
-        return matrix;
-    }
-    void loadIdentity()
-    {
-        std::fill(matrix, matrix + 16, 0.0f);
-        matrix[0] = matrix[5] = matrix[10] = matrix[15] = 1.0f;
-    }
-    static Matrix identity()
-    {
-        Matrix t;
-        t.loadIdentity();
-        return t;
-    }
-    static Matrix translate(float x, float y, float z)
-    {
-        Matrix t = identity();
-        t[12] = x;
-        t[13] = y;
-        t[14] = z;
-        return t;
-    }
-    static Matrix scale(float x, float y, float z)
-    {
-        Matrix t = identity();
-        t[0] = x;
-        t[5] = y;
-        t[10] = z;
-        return t;
-    }
-    static Matrix rotateX(float rad)
-    {
-        Matrix r = identity();
-        r[5] = std::cos(rad);
-        r[6] = std::sin(rad);
-        r[9] = -std::sin(rad);
-        r[10] = std::cos(rad);
-        return r;
-    }
-    static Matrix rotateY(float rad)
-    {
-        Matrix r = identity();
-        r[0] = std::cos(rad);
-        r[2] = -std::sin(rad);
-        r[8] = std::sin(rad);
-        r[10] = std::cos(rad);
-        return r;
-    }
-    static Matrix rotateZ(float rad)
-    {
-        Matrix r;
-        r.loadIdentity();
-        r[0] = std::cos(rad);
-        r[1] = std::sin(rad);
-        r[4] = -std::sin(rad);
-        r[5] = std::cos(rad);
-    }
-    static Matrix rotate(float rad, float x, float y, float z)
-    {
-        Matrix r = identity();
-        const float d = std::sqrt(x * x + y * y + z * z);
-        if (d > 0.0f) {
-            const float l = x / d;
-            const float m = y / d;
-            const float n = z / d;
-            const float l2(l * l);
-            const float m2 = m * m;
-            const float n2 = n * n;
-            const float lm = l * m;
-            const float mn = m * n;
-            const float nl = n * l;
-            const float c = std::cos(rad);
-            const float s = std::sin(rad);
-            const float c1 = 1.0f - c;
-            r[0] = (1.0f - l2) * c + l2;
-            r[1] = lm * c1 + n * s;
-            r[2] = nl * c1 - m * s;
-            r[4] = lm * c1 - n * s;
-            r[5] = (1.0f - m2) * c + m2;
-            r[6] = mn * c1 + l * s;
-            r[8] = nl * c1 + m * s;
-            r[9] = mn * c1 - l * s;
-            r[10] = (1.0f - n2) * c + n2;
-        }
-        return r;
-    }
-    static Matrix lookat(
-        float eye_x, float eye_y, float eye_z,
-        float gaze_x, float gaze_y, float gaze_z,
-        float up_x, float up_y, float up_z)
-    {
-        const Matrix tv(translate(-eye_x, -eye_y, -eye_z));
 
-        const float tx = eye_x - gaze_x;
-        const float ty = eye_y - gaze_y;
-        const float tz = eye_z - gaze_z;
-        const float rx = up_y * tz - up_z * ty;
-        const float ry = up_z * tx - up_x * tz;
-        const float rz = up_x * ty - up_y * tx;
-        const float sx = ty * rz - tz * ry;
-        const float sy = tz * rx - tx * rz;
-        const float sz = tx * ry - ty * rx;
 
-        const float s = std::sqrt(sx * sx + sy * sy + sz * sz);
-        if (s == 0.0f) return tv;
-        Matrix rv = identity();
-        const float r = std::sqrt(rx * rx + ry * ry + rz * rz);
-        rv[0] = rx / r;
-        rv[4] = ry / r;
-        rv[8] = rz / r;
-        rv[1] = sx / s;
-        rv[5] = sy / s;
-        rv[9] = sz / s;
-        const float t = std::sqrt(tx * tx + ty * ty + tz * tz);
-        rv[2] = tx / t;
-        rv[6] = ty / t;
-        rv[10] = tz / t;
-
-        return rv * tv;
-    }
-
-    static Matrix orthogonal(float left, float right, float bottom, float top, float zNear, float zFar)
-    {
-        Matrix t = identity();
-        const float dx = right - left;
-        const float dy = top - bottom;
-        const float dz = zFar - zNear;
-        if (dx != 0.0f && dy != 0.0f && dz != 0.0f) {
-            t[0] = 2.0f / dx;
-            t[5] = 2.0f / dy;
-            t[10] = -2.0f / dz;
-            t[12] = -(right + left) / dx;
-            t[13] = -(top + bottom) / dy;
-            t[14] = -(zFar + zNear) / dz;
-        }
-        return t;
-    }
-
-    static Matrix frustum(float left, float right, float bottom, float top, float zNear, float zFar)
-    {
-        Matrix t = identity();
-        const float dx = right - left;
-        const float dy = top - bottom;
-        const float dz = zFar - zNear;
-        if (dx != 0.0f && dy != 0.0f && dz != 0.0f)
-        {
-            t[0] = 2.0f * zNear / dx;
-            t[5] = 2.0f * zNear / dy;
-            t[8] = (right + left) / dx;
-            t[9] = (top + bottom) / dy;
-            t[10] = -(zFar + zNear) / dz;
-            t[11] = -1.0f;
-            t[14] = -2.0f * zFar * zNear / dz;
-            t[15] = 0.0f;
-        }
-        return t;
-    }
-    static Matrix perspective(float fovy, float aspect, float zNear, float zFar)
-    {
-        Matrix t = identity();
-        const GLfloat dz = zFar - zNear;
-        if (dz != 0.0f) {
-            t[5] = 1.0f / std::tan(fovy * 0.5f);
-            t[0] = t[5] / aspect;
-            t[10] = -(zFar + zNear) / dz;
-            t[11] = -1.0f;
-            t[14] = -2.0f * zFar * zNear / dz;
-            t[15] = 0.0f;
-        }
-        return t;
-    }
-private:
-    float matrix[4*4];
-};
 
 class Object
 {
@@ -251,7 +44,7 @@ public:
         GLfloat color[3];
     };
 public:
-    Object(GLuint attr_index, GLint elem_size, GLsizei vertex_num, const Vertex* vertex, GLsizei index_num = 0, const GLuint* index = NULL);
+    Object(GLuint attr_index, GLint elem_size, GLsizei vertex_num, const Vertex* vertex, GLsizei index_num = 0, const GLuint* index = nullptr);
     virtual ~Object();
     void Bind() const;
 private:
@@ -297,7 +90,7 @@ void Object::Bind() const
 class Shape
 {
 public:
-    Shape(GLuint attr_index, GLint elem_size, GLsizei vertex_num, const Object::Vertex* vertex, GLsizei index_num = 0, const GLuint* index = NULL);
+    Shape(GLuint attr_index, GLint elem_size, GLsizei vertex_num, const Object::Vertex* vertex, GLsizei index_num = 0, const GLuint* index = nullptr);
     void Draw() const;
 private:
     virtual void Execute() const;
@@ -605,7 +398,7 @@ Window::Window(int32_t width, int32_t height, const char* title)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    RUN_CHECK(window_ = glfwCreateWindow(width, height, title, NULL, NULL));
+    RUN_CHECK(window_ = glfwCreateWindow(width, height, title, nullptr, nullptr));
     glfwMakeContextCurrent(window_);
 
     /* Initialize GLEW. This must be after initializing GLFW, creating window and setting current context window */
@@ -729,25 +522,25 @@ bool Window::RunFrame()
 
     glUseProgram(program_id_);
 
-    const Matrix r = Matrix::rotate(static_cast<GLfloat>(glfwGetTime()), 0.0f, 1.0f, 0.0f);
-    const Matrix translation = Matrix::translate(location_x_, location_y_, 0.0f);
+    const Matrix r = Transform::Rotate(static_cast<GLfloat>(glfwGetTime()), 0.0f, 1.0f, 0.0f);
+    const Matrix translation = Transform::Translate(location_x_, location_y_, 0.0f);
     const Matrix model = translation * r;
-    const Matrix view = Matrix::lookat(3.0f, 4.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+    const Matrix view = Transform::LookAt(3.0f, 4.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 
     //float scale = scale_ * 2.0f;
     //const float w = width_ / scale;
     //const float h = height_ / scale;
     //const Matrix projection = Matrix::frustum(-w, w, -h, h, 1.0f, 10.0f);
-    const float fovy = scale_ * 0.01;;
+    const float fovy = scale_ * 0.01f;
     const float aspect = static_cast<float>(width_) / height_;
-    const Matrix projection = Matrix::perspective(fovy, aspect, 1.0f, 10.0f);
+    const Matrix projection = Projection::Perspective(fovy, aspect, 1.0f, 10.0f);
     const Matrix modelviewprojection = projection * view * model;
 
-    glUniformMatrix4fv(modelviewprojection_loc_, 1, GL_FALSE, modelviewprojection.data());
+    glUniformMatrix4fv(modelviewprojection_loc_, 1, GL_TRUE, modelviewprojection.Data());
     shape_->Draw();
 
-    const Matrix modelviewprojection2 = modelviewprojection * Matrix::translate(0.0f, 0.0f, 3.0f);
-    glUniformMatrix4fv(modelviewprojection_loc_, 1, GL_FALSE, modelviewprojection2.data());
+    const Matrix modelviewprojection2 = modelviewprojection * Transform::Translate(0.0f, 0.0f, 3.0f);
+    glUniformMatrix4fv(modelviewprojection_loc_, 1, GL_TRUE, modelviewprojection2.Data());
     shape_->Draw();
 
     glfwSwapBuffers(window_);
@@ -755,133 +548,21 @@ bool Window::RunFrame()
     return true;
 }
 
+
 int main(int argc, char *argv[])
 {
     /*** Initialize ***/
-    /* Initialize GLFW */
+    /* Initialize OpenGL */
     RUN_CHECK(glfwInit() == GL_TRUE);
     std::atexit(glfwTerminate);
-
     glfwSetTime(0.0);
 
     Window my_window;
-
+    
     /*** Start loop ***/
     while (1) {
         if (my_window.RunFrame() == false) break;
     }
-
-    return 0;
-    
-
-    /* Create a window (x4 anti-aliasing, OpenGL3.3 Core Profile)*/
-    GLFWwindow* window;
-    glfwWindowHint(GLFW_SAMPLES, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    RUN_CHECK(window = glfwCreateWindow(720, 480, "main", NULL, NULL));
-    glfwMakeContextCurrent(window);
-    
-    /* Initialize GLEW */
-    glewExperimental = true;
-    RUN_CHECK(glewInit() == GLEW_OK);
-
-    /* Ensure not to miss input */
-    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-    glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, GL_TRUE);
-
-    /* Dark blue background */
-    glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
-    
-    /* Enable depth test */
-    glEnable(GL_DEPTH_TEST);
-    /* Accept fragment if it closer to the camera than the former one */
-    glDepthFunc(GL_LESS);
-    /* Cull triangles which normal is not towards the camera */
-    glEnable(GL_CULL_FACE);
-
-    /* Load shader */
-    GLuint programId = LoadShaderProgram("resource/SimpleVertexShader.vertexshader", "resource/SimpleFragmentShader.fragmentshader");
-    GLuint matrixId = glGetUniformLocation(programId, "MVP");
-
-    /* Create Vertex Array Object */
-    GLuint vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    /* Create Vertex Buffer Object and copy data */
-    GLuint vertexBuffer;
-    glGenBuffers(1, &vertexBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-
-    GLuint colorBuffer;
-    glGenBuffers(1, &colorBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data), g_color_buffer_data, GL_STATIC_DRAW);
-
-    /* Initialize camera matrix controls (Initial position : on +Z, toward -Z) */
-    CameraControl_initialize(window, glm::vec3(0, 0, 5), 3.14f, 0.0f);
-
-    /*** Start loop ***/
-    while(1) {
-        my_window.RunFrame();
-
-        glfwMakeContextCurrent(window);
-        /* Clear the screen */
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glUseProgram(programId);
-        /* Camera matrix */
-        CameraControl_update(window);
-        glm::mat4 Projection = CameraControl_getProjectionMatrix();
-        glm::mat4 View = CameraControl_getViewMatrix();
-
-        /* Model matrix */
-        glm::mat4 Model = glm::mat4(1.0f);
-        static float rotX = 0.0f;
-        glm::mat4 myRotationAxis = glm::rotate(rotX++ / (2 * 3.14f), glm::vec3(1, 0, 0));
-        Model = myRotationAxis * Model;
-
-        /* Calculate ModelViewProjection matrix and send it to shader */
-        glm::mat4 MVP = Projection * View * Model;
-        glUniformMatrix4fv(matrixId, 1, GL_FALSE, &MVP[0][0]);
-
-        /* Set attribute buffer */
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-        glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-        /* Draw the triangle */
-        glDrawArrays(GL_TRIANGLES, 0, sizeof(g_vertex_buffer_data) / sizeof(float) / 3);
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
-        glUseProgram(0);
-
-        /* Swap buffers */
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-
-        /* Check if the ESC key was pressed or the window was closed */
-        if (glfwWindowShouldClose(window) != 0 || glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-            break;
-        }
-    }
-
-    /*** Finalize ***/
-    /* Cleanup VBO and shader */
-    glDeleteBuffers(1, &vertexBuffer);
-    glDeleteBuffers(1, &colorBuffer);
-    glDeleteVertexArrays(1, &vao);
-    glDeleteProgram(programId);
-
-    /* Close OpenGL window and terminate GLFW */
-    glfwTerminate();
 
     return 0;
 }
