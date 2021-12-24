@@ -15,6 +15,7 @@ namespace Transform
         float eye_x, float eye_y, float eye_z,
         float gaze_x, float gaze_y, float gaze_z,
         float up_x, float up_y, float up_z);
+    Matrix LookAt(Matrix eye, Matrix gaze, Matrix up);
 }
 
 namespace Projection {

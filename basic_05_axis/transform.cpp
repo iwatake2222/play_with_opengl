@@ -122,8 +122,12 @@ Matrix Transform::LookAt(
     rv[9] = ty / t;
     rv[10] = tz / t;
 
-
     return rv * tv;
+}
+
+Matrix Transform::LookAt(Matrix eye, Matrix gaze, Matrix up)
+{
+    return Transform::LookAt(eye[0], eye[1], eye[2], gaze[0], gaze[1], gaze[2], up[0], up[1], up[2]);
 }
 
 

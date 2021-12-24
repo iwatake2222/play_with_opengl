@@ -21,9 +21,10 @@ endif()
 # Create executable file
 add_executable(${ProjectName}
     main.cpp
-    shader.h shader.cpp
     matrix.h
+    shader.h shader.cpp
     transform.h transform.cpp
+    window.h window.cpp
 )
 
 # For OpenGL and GLFW
