@@ -54,27 +54,40 @@ int main(int argc, char *argv[])
     glfwSetTime(0.0);
 
     Window my_window;
-    my_window.LookAt(Matrix(3, 1, { 2.0f, 2.0f, 10.0f }), Matrix(3, 1, { 0.0f, 0.0f, 0.0f }), Matrix(3, 1, { 0.0f, 1.0f, 0.0f }));
+    my_window.LookAt(Matrix(3, 1, { 2.0f, 2.0f, 2.0f }), Matrix(3, 1, { 2.0f, 2.0f, 2.0f }), Matrix(3, 1, { 0.0f, 1.0f, 0.0f }));
     
     /* Create shape */
-    std::unique_ptr<Shape> cube0(new ShapeIndex(CubeWireVertex, CubeWireIndex));
-    std::unique_ptr<Shape> cube1(new ShapeSolid(CubeTriangleVertex));
-    std::unique_ptr<Shape> ground(CreateGround(10, 0.1f));
+    std::unique_ptr<Shape> cube0(new ShapeSolid(CubeTriangleVertex));
+    std::unique_ptr<Shape> cube1(new ShapeIndex(CubeWireVertex, CubeWireIndex));
+    
+    std::unique_ptr<Shape> ground(CreateGround(10.0f, 1.0f));
+    std::unique_ptr<Shape> axes(CreateAxes(1.5f, 0.2f, { 1.0f, 0.4f, 0.4f }, { 0.4f, 1.0f, 0.4f }, { 0.4f, 0.4f, 1.0f }));
+    std::unique_ptr<Shape> object_axes(CreateAxes(1.0f, 0.2f, { 0.8f, 0.0f, 0.0f }, { 0.0f, 0.8f, 0.0f }, { 0.0f, 0.0f, 0.8f }));
+    std::unique_ptr<Shape> object(CreateFlatObject(0.5f, 0.8f, { 0.3f, 0.75f, 1.0f }, { 0.6f, 0.0f, 0.6f }));
 
     /*** Start loop ***/
     while (1) {
         if (my_window.FrameStart() == false) break;
         
-        ground->Draw(my_window.GetViewProjection(), Matrix::Identity(4));
+        glLineWidth(0.5f);
+        ground->Draw(my_window.GetViewProjection(), Transform::Translate(0.0f, -1.0f, 0.0f));
+        glLineWidth(2.0f);
+        axes->Draw(my_window.GetViewProjection(), Matrix::Identity(4));
+        
+        Matrix model = Matrix::Identity(4);
+        model = Transform::Rotate(static_cast<GLfloat>(glfwGetTime()), 0.0f, 1.0f, 0.0f);
+        object->Draw(my_window.GetViewProjection(), model);
+        glLineWidth(4.0f);
+        object_axes->Draw(my_window.GetViewProjection(), model);
 
+        glLineWidth(1.0f);
         const Matrix r = Transform::Rotate(static_cast<GLfloat>(glfwGetTime()), 0.0f, 1.0f, 0.0f);
-        const Matrix translation0 = Transform::Translate(0.0f, 0.0f, 0.0f);
+        const Matrix translation0 = Transform::Translate(3.0f, 3.0f, 0.0f);
         const Matrix model0 = translation0 * r;
         cube0->Draw(my_window.GetViewProjection(), model0);
         const Matrix translation1 = Transform::Translate(3.0f, 0.0f, 0.0f);
         const Matrix model1 = translation1 * r;
         cube1->Draw(my_window.GetViewProjection(), model1);
-        
 
         my_window.SwapBuffers();
     }

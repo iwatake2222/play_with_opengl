@@ -65,6 +65,16 @@ void Window::CbWheel(GLFWwindow* window, double x, double y)
     }
 }
 
+void Window::CbKeyboard(GLFWwindow* window, int32_t key, int32_t scancode, int32_t action, int32_t mods)
+{
+    Window* const instance = static_cast<Window*>(glfwGetWindowUserPointer(window));
+    if (instance) {
+        if (key == GLFW_KEY_1 && action == GLFW_PRESS) {
+            instance->m_is_darkmode = !instance->m_is_darkmode;
+        }
+    }
+}
+
 Matrix Window::GetViewProjection(float fovy, float z_near, float z_far)
 {
     const float aspect = static_cast<float>(m_width) / m_height;
@@ -77,6 +87,7 @@ Window::Window(int32_t width, int32_t height, const char* title)
     /* Initialize variables */
     m_width = width;
     m_height = height;
+    m_is_darkmode = true;
     m_mat_view = Transform::LookAt(0.0f, 0.0f, 10.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 
     /* Create a window (x4 anti-aliasing, OpenGL3.3 Core Profile)*/
@@ -116,6 +127,7 @@ Window::Window(int32_t width, int32_t height, const char* title)
     CbResize(m_window, width, height);
 
     glfwSetScrollCallback(m_window, CbWheel);
+    glfwSetKeyCallback(m_window, CbKeyboard);
 
     m_last_time = glfwGetTime();
     glfwGetCursorPos(m_window, &m_last_mouse_x, &m_last_mouse_y);
@@ -183,6 +195,7 @@ bool Window::FrameStart()
     }
     
     /* view matrix = rotation * translate. So no need to move the camera to the origin */
+    /* note: tx, ty, tz in view matrix are camera coordinate */
     m_mat_view = mat_trans * m_mat_view;
     //Matrix t_to_org = Transform::Translate(-m_mat_view(0, 3), -m_mat_view(1, 3), -m_mat_view(2, 3));
     //Matrix t_from_org = Transform::Translate(m_mat_view(0, 3), m_mat_view(1, 3), m_mat_view(2, 3));
@@ -190,7 +203,12 @@ bool Window::FrameStart()
     m_mat_view = mat_rot * m_mat_view;
     //m_mat_view = t_from_org * m_mat_view;
     
-    glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+
+    if (m_is_darkmode) {
+        glClearColor(0.1f, 0.1f, 0.1f, 0.0f); 
+    } else {
+        glClearColor(0.9f, 0.9f, 0.9f, 0.0f);
+    }
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     return true;

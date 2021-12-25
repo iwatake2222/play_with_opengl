@@ -59,3 +59,106 @@ Shape* CreateGround(float size, float interval, std::vector<float> color_vec3)
     }
     return new ShapeIndex(vertex_list, index_list);
 }
+
+std::vector<std::vector<float>> CreateArrowZVertexList(float size, float arrow_size)
+{
+    std::vector<std::vector<float>> vertex_list;
+    vertex_list.push_back({ 0.0f, 0.0f, -size });
+    vertex_list.push_back({ 0.0f, 0.0f, size });
+
+    vertex_list.push_back({ 0.0f, 0.0f, size });
+    vertex_list.push_back({ 0.0f, arrow_size, size - arrow_size });
+
+    vertex_list.push_back({ 0.0f, 0.0f, size });
+    vertex_list.push_back({ 0.0f, -arrow_size, size - arrow_size });
+
+    vertex_list.push_back({ 0.0f, 0.0f, size });
+    vertex_list.push_back({ arrow_size, 0.0f, size - arrow_size });
+
+    vertex_list.push_back({ 0.0f, 0.0f, size });
+    vertex_list.push_back({ -arrow_size, 0.0f, size - arrow_size });
+
+    vertex_list.push_back({ arrow_size, 0.0f, size - arrow_size });
+    vertex_list.push_back({ 0.0f, arrow_size, size - arrow_size });
+
+    vertex_list.push_back({ 0.0f, arrow_size, size - arrow_size });
+    vertex_list.push_back({ -arrow_size, 0.0f, size - arrow_size });
+
+    vertex_list.push_back({ -arrow_size, 0.0f, size - arrow_size });
+    vertex_list.push_back({ 0.0f, -arrow_size, size - arrow_size });
+
+    vertex_list.push_back({ 0.0f, -arrow_size, size - arrow_size });
+    vertex_list.push_back({ arrow_size, 0.0f, size - arrow_size });
+
+    return vertex_list;
+}
+
+
+std::vector<Object::Vertex> CreateArrowZVertexList(float size, float arrow_size, std::vector<float> color_vec3)
+{
+    const auto point_list = CreateArrowZVertexList(size, arrow_size);
+    std::vector<Object::Vertex> vertex_list;
+    for (const auto& point : point_list) {
+        vertex_list.push_back({ point[0], point[1], point[2], color_vec3[0], color_vec3[1], color_vec3[2] });
+    }
+    return vertex_list;
+}
+
+
+Shape* CreateArrowZ(float size, float arrow_size, std::vector<float> color_vec3)
+{
+    return new Shape(CreateArrowZVertexList(size, arrow_size, color_vec3));
+}
+
+Shape* CreateAxes(float size, float arrow_size, std::vector<float> color_x, std::vector<float> color_y, std::vector<float> color_z)
+{
+    const auto point_list = CreateArrowZVertexList(size, arrow_size);
+    std::vector<Object::Vertex> vertex_list;
+    /* X axis */
+    for (const auto& point : point_list) {
+        vertex_list.push_back({ point[2], point[0], point[1], color_x[0], color_x[1], color_x[2] });
+    }
+    /* Y axis */
+    for (const auto& point : point_list) {
+        vertex_list.push_back({ point[1], point[2], point[0], color_y[0], color_y[1], color_y[2] });
+    }
+    /* Z axis */
+    for (const auto& point : point_list) {
+        vertex_list.push_back({ point[0], point[1], point[2], color_z[0], color_z[1], color_z[2] });
+    }
+
+    return new Shape(vertex_list);
+}
+
+Shape* CreateFlatObject(float width, float height, std::vector<float> color_front, std::vector<float> color_back)
+{
+    std::vector<Object::Vertex> vertex_list;
+    const std::vector<std::vector<float>> base_vertex_list{
+        { 1.0f, -1.0f, 0.0f },
+        { -1.0f, 1.0f, 0.0f },
+        { -1.0f, -1.0f, 0.0f },
+        { 1.0f, -1.0f, 0.0f },
+        { 1.0f, 1.0f, 0.0f },
+        { -1.0f, 1.0f, 0.0f },
+
+        { 1.0f, -1.0f, 0.0f },
+        { -1.0f, -1.0f, 0.0f },
+        { -1.0f, 1.0f, 0.0f },
+        { 1.0f, -1.0f, 0.0f },
+        { -1.0f, 1.0f, 0.0f },
+        { 1.0f, 1.0f, 0.0f },
+    };
+
+    /* front */
+    for (int32_t i = 0; i < base_vertex_list.size() / 2; i++) {
+        const auto& point = base_vertex_list[i];
+        vertex_list.push_back({ point[0] * width, point[1] * height, point[2], color_front[0], color_front[1], color_front[2] });
+    }
+    /* back */
+    for (int32_t i = base_vertex_list.size() / 2; i < base_vertex_list.size(); i++) {
+        const auto& point = base_vertex_list[i];
+        vertex_list.push_back({ point[0] * width, point[1] * height, point[2], color_back[0], color_back[1], color_back[2] });
+    }
+
+    return new ShapeSolid(vertex_list);
+}

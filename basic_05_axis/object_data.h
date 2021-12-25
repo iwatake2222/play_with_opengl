@@ -24,6 +24,9 @@ limitations under the License.
 #include "Shape.h"
 
 Shape* CreateGround(float size, float interval, std::vector<float> color_vec3 = { 0.0f, 0.5f, 0.5f });
+Shape* CreateArrowZ(float size, float arrow_size, std::vector<float> color_vec3 = { 0.5f, 0.0f, 0.0f });
+Shape* CreateAxes(float size, float arrow_size, std::vector<float> color_x, std::vector<float> color_y, std::vector<float> color_z);
+Shape* CreateFlatObject(float width, float height, std::vector<float> color_front, std::vector<float> color_back);
 
 const std::vector<Object::Vertex> CubeWireVertex
 {

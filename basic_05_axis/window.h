@@ -32,6 +32,7 @@ class Window
 private:
     static void CbResize(GLFWwindow* window, int32_t width, int32_t height);
     static void CbWheel(GLFWwindow* window, double x, double y);
+    static void CbKeyboard(GLFWwindow* window, int32_t key, int32_t scancode, int32_t action, int32_t mods);
 public:
     Window(int32_t width = 720, int32_t height = 480, const char* title = "test");
     ~Window();
@@ -49,6 +50,8 @@ private:
     double m_last_time;
     double m_last_mouse_x;
     double m_last_mouse_y;
+
+    bool m_is_darkmode;
 };
 
 

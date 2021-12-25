@@ -115,7 +115,8 @@ void Shape::Draw(const Matrix & viewprojection, const Matrix & model) const
 
 void Shape::Execute() const
 {
-    glDrawArrays(GL_LINE_LOOP, 0, m_vertex_num);
+    //glDrawArrays(GL_LINE_LOOP, 0, m_vertex_num);
+    glDrawArrays(GL_LINES, 0, m_vertex_num);
 }
 
 
