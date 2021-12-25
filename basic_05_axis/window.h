@@ -35,6 +35,7 @@ private:
 public:
     Window(int32_t width = 720, int32_t height = 480, const char* title = "test");
     ~Window();
+    void LookAt(const Matrix& eye, const Matrix& gaze, const Matrix& up);
     bool FrameStart();
     void SwapBuffers();
     Matrix GetViewProjection(float fovy = 1.0f, float z_near = 1.0f, float z_far = 1000.0f);
@@ -43,9 +44,11 @@ private:
     GLFWwindow* m_window;
     int32_t m_width;
     int32_t m_height;
-    Matrix m_camera_position;   // vec3
-    Matrix m_camera_target;   // vec3
-    Matrix m_camera_up;   // vec3
+    Matrix m_mat_view;       // 4 x 4
+
+    double m_last_time;
+    double m_last_mouse_x;
+    double m_last_mouse_y;
 };
 
 

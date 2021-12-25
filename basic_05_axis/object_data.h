@@ -23,6 +23,8 @@ limitations under the License.
 
 #include "Shape.h"
 
+Shape* CreateGround(float size, float interval, std::vector<float> color_vec3 = { 0.0f, 0.5f, 0.5f });
+
 const std::vector<Object::Vertex> CubeWireVertex
 {
     { -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f },

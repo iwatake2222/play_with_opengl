@@ -172,16 +172,16 @@ public:
     {
         if (m_rows == 1) {
             for (int32_t x = 0; x < m_cols; x++) {
-                printf("%4.f ", (*this)(0, x));
+                printf("%4.2f ", (*this)(0, x));
             }
         } else if (m_cols == 1) {
             for (int32_t y = 0; y < m_rows; y++) {
-                printf("%4.f ", (*this)(y, 0));
+                printf("%4.2f ", (*this)(y, 0));
             }
         } else {
             for (int32_t y = 0; y < m_rows; y++) {
                 for (int32_t x = 0; x < m_cols; x++) {
-                    printf("%4.f ", (*this)(y, x));
+                    printf("%4.2f ", (*this)(y, x));
                 }
                 printf("\n");
             }

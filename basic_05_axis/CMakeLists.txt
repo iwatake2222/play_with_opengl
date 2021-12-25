@@ -26,7 +26,7 @@ add_executable(${ProjectName}
     shader.h shader.cpp
     window.h window.cpp
     shape.h shape.cpp
-    object_data.h
+    object_data.h object_data.cpp
 )
 
 # For OpenGL and GLFW

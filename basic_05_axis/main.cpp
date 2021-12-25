@@ -54,14 +54,18 @@ int main(int argc, char *argv[])
     glfwSetTime(0.0);
 
     Window my_window;
+    my_window.LookAt(Matrix(3, 1, { 2.0f, 2.0f, 10.0f }), Matrix(3, 1, { 0.0f, 0.0f, 0.0f }), Matrix(3, 1, { 0.0f, 1.0f, 0.0f }));
     
     /* Create shape */
     std::unique_ptr<Shape> cube0(new ShapeIndex(CubeWireVertex, CubeWireIndex));
     std::unique_ptr<Shape> cube1(new ShapeSolid(CubeTriangleVertex));
+    std::unique_ptr<Shape> ground(CreateGround(10, 0.1f));
 
     /*** Start loop ***/
     while (1) {
         if (my_window.FrameStart() == false) break;
+        
+        ground->Draw(my_window.GetViewProjection(), Matrix::Identity(4));
 
         const Matrix r = Transform::Rotate(static_cast<GLfloat>(glfwGetTime()), 0.0f, 1.0f, 0.0f);
         const Matrix translation0 = Transform::Translate(0.0f, 0.0f, 0.0f);
@@ -70,6 +74,7 @@ int main(int argc, char *argv[])
         const Matrix translation1 = Transform::Translate(3.0f, 0.0f, 0.0f);
         const Matrix model1 = translation1 * r;
         cube1->Draw(my_window.GetViewProjection(), model1);
+        
 
         my_window.SwapBuffers();
     }
