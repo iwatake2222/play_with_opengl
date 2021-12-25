@@ -154,14 +154,25 @@ public:
         return ret;
     }
 
-    void Display() const
+    void Print() const
     {
-        for (int32_t y = 0; y < m_rows; y++) {
+        if (m_rows == 1) {
             for (int32_t x = 0; x < m_cols; x++) {
-                printf("%4.f ", (*this)(y, x));
+                printf("%4.f ", (*this)(0, x));
             }
-            printf("\n");
+        } else if (m_cols == 1) {
+            for (int32_t y = 0; y < m_rows; y++) {
+                printf("%4.f ", (*this)(y, 0));
+            }
+        } else {
+            for (int32_t y = 0; y < m_rows; y++) {
+                for (int32_t x = 0; x < m_cols; x++) {
+                    printf("%4.f ", (*this)(y, x));
+                }
+                printf("\n");
+            }
         }
+        printf("\n");
     }
 
     static Matrix Identity(int32_t size)
@@ -185,46 +196,46 @@ public:
             Matrix mat6(3, 3, { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
 
             printf("\n--- mat1 ---\n");
-            mat1.Display();
+            mat1.Print();
 
             printf("\n--- mat2 ---\n");
-            mat2.Display();
+            mat2.Print();
 
             printf("\n--- add ---\n");
             Matrix matAdd = mat1 + mat2;
-            matAdd.Display();
+            matAdd.Print();
 
             printf("\n--- sub ---\n");
             Matrix matSub = mat1 - mat2;
-            matSub.Display();
+            matSub.Print();
 
             printf("\n--- scalar ---\n");
             Matrix mat_k = mat1 * 2.0f;
-            mat_k.Display();
+            mat_k.Print();
 
             printf("\n--- mul ---\n");
             Matrix matMul = mat1 * mat3;
-            matMul.Display();
+            matMul.Print();
 
             printf("\n--- transpose ---\n");
             Matrix matTranspose = mat1.Transpose();
-            matTranspose.Display();
+            matTranspose.Print();
 
             printf("\n--- Identity matrix ---\n");
             Matrix matI = Matrix::Identity(3);
-            matI.Display();
+            matI.Print();
 
             printf("\n--- Inverse matrix 2x2 ---\n");
             Matrix matInv = mat4.Inverse();
-            matInv.Display();
-            (mat4 * matInv).Display();
-            (matInv * mat4).Display();
+            matInv.Print();
+            (mat4 * matInv).Print();
+            (matInv * mat4).Print();
 
             printf("\n--- Inverse matrix 3x3 ---\n");
             matInv = mat5.Inverse();
-            matInv.Display();
-            (mat5 * matInv).Display();
-            (matInv * mat5).Display();
+            matInv.Print();
+            (mat5 * matInv).Print();
+            (matInv * mat5).Print();
 
             printf("\n--- Inverse of non-singular matrix 3x3 ---\n");
             matInv = mat6.Inverse();

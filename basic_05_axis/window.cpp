@@ -25,7 +25,7 @@
 
 
 /*** Function ***/
-void Window::CbResize(GLFWwindow* const window, int32_t width, int32_t height)
+void Window::CbResize(GLFWwindow* window, int32_t width, int32_t height)
 {
     int32_t fb_width, fb_height;
     glfwGetFramebufferSize(window, &fb_width, &fb_height);

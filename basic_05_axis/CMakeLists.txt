@@ -22,9 +22,11 @@ endif()
 add_executable(${ProjectName}
     main.cpp
     matrix.h
-    shader.h shader.cpp
     transform.h transform.cpp
+    shader.h shader.cpp
     window.h window.cpp
+    shape.h shape.cpp
+    object_data.h
 )
 
 # For OpenGL and GLFW
