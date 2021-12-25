@@ -48,6 +48,8 @@ make
 ### Code and other software stuffs
 - Some code and materials are retrieved from:
 	- https://www.opengl-tutorial.org/
+	- https://marina.sys.wakayama-u.ac.jp/~tokoi/oglarticles.html
+		- GLFW による OpenGL 入門 (PDF) : https://tokoik.github.io/GLFWdraft.pdf
 
 - resource/rpalm.xml
 	- Hand detection (Haar cascade)
