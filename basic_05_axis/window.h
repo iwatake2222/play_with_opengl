@@ -42,10 +42,17 @@ public:
     Matrix GetViewProjection(float fovy = 1.0f, float z_near = 1.0f, float z_far = 1000.0f);
 
 private:
+    void MoveCameraPosFromCameraCoordinate(float dx, float dy, float dz);
+
+
+private:
     GLFWwindow* m_window;
     int32_t m_width;
     int32_t m_height;
     Matrix m_mat_view;       // 4 x 4
+
+    float m_camera_pos[3];  // in world coordinate
+    float m_camera_angle[3];
 
     double m_last_time;
     double m_last_mouse_x;

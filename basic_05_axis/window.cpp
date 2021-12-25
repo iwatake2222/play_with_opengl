@@ -60,8 +60,8 @@ void Window::CbWheel(GLFWwindow* window, double x, double y)
 {
     Window* const instance = static_cast<Window*>(glfwGetWindowUserPointer(window));
     if (instance) {
-        Matrix mat_trans = Transform::Translate(0.0f, 0.0f, static_cast<float>(y) * MOUSE_WHEEL_SPEED);
-        instance->m_mat_view = mat_trans * instance->m_mat_view;
+        //instance->m_camera_pos[2] -= static_cast<float>(y) * MOUSE_WHEEL_SPEED;
+        instance->MoveCameraPosFromCameraCoordinate(0, 0, -static_cast<float>(y) * MOUSE_WHEEL_SPEED);
     }
 }
 
@@ -77,9 +77,12 @@ void Window::CbKeyboard(GLFWwindow* window, int32_t key, int32_t scancode, int32
 
 Matrix Window::GetViewProjection(float fovy, float z_near, float z_far)
 {
+    Matrix view = Matrix::Identity(4);
+    view = Transform::Translate(-m_camera_pos[0], -m_camera_pos[1], -m_camera_pos[2]);  /* move to origin */
+    view = Transform::RotateX(m_camera_angle[0]) * Transform::RotateY(m_camera_angle[1]) * view; /* rotate*/
     const float aspect = static_cast<float>(m_width) / m_height;
     const Matrix projection = Projection::Perspective(fovy, aspect, z_near, z_far);
-    return projection * m_mat_view;
+    return projection * view;
 }
 
 Window::Window(int32_t width, int32_t height, const char* title)
@@ -88,7 +91,8 @@ Window::Window(int32_t width, int32_t height, const char* title)
     m_width = width;
     m_height = height;
     m_is_darkmode = true;
-    m_mat_view = Transform::LookAt(0.0f, 0.0f, 10.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+    std::fill(m_camera_pos, m_camera_pos + 3, 0);
+    std::fill(m_camera_angle, m_camera_angle + 3, 0);
 
     /* Create a window (x4 anti-aliasing, OpenGL3.3 Core Profile)*/
     glfwWindowHint(GLFW_SAMPLES, 4);
@@ -140,7 +144,12 @@ Window::~Window()
 
 void Window::LookAt(const Matrix& eye, const Matrix& gaze, const Matrix& up)
 {
-    m_mat_view = Transform::LookAt(eye, gaze, up);
+    // todo
+    //Matrix view = Transform::LookAt(eye, gaze, up);
+    std::copy(eye.Data(), eye.Data() + 3, m_camera_pos);
+    m_camera_angle[0] = 0.5;
+    m_camera_angle[1] = -0.5;
+    //m_camera_angle[2] = -0.5;
 }
 
 bool Window::FrameStart()
@@ -169,41 +178,35 @@ bool Window::FrameStart()
     m_last_mouse_x = mouse_x;
     m_last_mouse_y = mouse_y;
 
-    Matrix mat_rot = Matrix::Identity(4);
-    Matrix mat_trans = Matrix::Identity(4);
     if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_2) != GLFW_RELEASE) {
-        mat_rot = Transform::RotateY(mouse_move_x * MOUSE_ROT_SPEED) * Transform::RotateX(mouse_move_y * MOUSE_ROT_SPEED);
+        m_camera_angle[1] += mouse_move_x * MOUSE_ROT_SPEED;
+        m_camera_angle[0] += mouse_move_y * MOUSE_ROT_SPEED;
+        
     }
     if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_3) != GLFW_RELEASE) {
-        mat_trans = Transform::Translate(mouse_move_x * MOUSE_MOV_SPEED, -mouse_move_y * MOUSE_MOV_SPEED, 0.0f) * mat_trans;
+        //m_camera_pos[0] -= mouse_move_x * MOUSE_MOV_SPEED;
+        //m_camera_pos[1] -= -mouse_move_y * MOUSE_MOV_SPEED;
+        float dx_in_camera_cord = -mouse_move_x * MOUSE_MOV_SPEED;
+        float dy_in_camera_cord = mouse_move_y * MOUSE_MOV_SPEED;
+        MoveCameraPosFromCameraCoordinate(dx_in_camera_cord, dy_in_camera_cord, 0);
     }
     
     if (glfwGetKey(m_window, GLFW_KEY_W) != GLFW_RELEASE) {
-        mat_trans = Transform::Translate(0.0f, 0.0f, delta_time * KEY_SPEED) * mat_trans;
+        m_camera_pos[2] -= delta_time * KEY_SPEED;
     } else if (glfwGetKey(m_window, GLFW_KEY_S) != GLFW_RELEASE) {
-        mat_trans = Transform::Translate(0.0f, 0.0f, -delta_time * KEY_SPEED) * mat_trans;
+        m_camera_pos[2] += delta_time * KEY_SPEED;
     }
     if (glfwGetKey(m_window, GLFW_KEY_A) != GLFW_RELEASE) {
-        mat_trans = Transform::Translate(delta_time * KEY_SPEED, 0.0f, 0.0f) * mat_trans;
+        m_camera_pos[0] -= delta_time * KEY_SPEED;
     } else if (glfwGetKey(m_window, GLFW_KEY_D) != GLFW_RELEASE) {
-        mat_trans = Transform::Translate(-delta_time * KEY_SPEED, 0.0f, 0.0f) * mat_trans;
+        m_camera_pos[0] += delta_time * KEY_SPEED;
     }
     if (glfwGetKey(m_window, GLFW_KEY_Z) != GLFW_RELEASE) {
-        mat_trans = Transform::Translate(0.0f, delta_time * KEY_SPEED, 0.0f) * mat_trans;
+        m_camera_pos[1] -= delta_time * KEY_SPEED;
     } else if (glfwGetKey(m_window, GLFW_KEY_X) != GLFW_RELEASE) {
-        mat_trans = Transform::Translate(0.0f, -delta_time * KEY_SPEED, 0.0f) * mat_trans;
+        m_camera_pos[1] += delta_time * KEY_SPEED;
     }
     
-    /* view matrix = rotation * translate. So no need to move the camera to the origin */
-    /* note: tx, ty, tz in view matrix are camera coordinate */
-    m_mat_view = mat_trans * m_mat_view;
-    //Matrix t_to_org = Transform::Translate(-m_mat_view(0, 3), -m_mat_view(1, 3), -m_mat_view(2, 3));
-    //Matrix t_from_org = Transform::Translate(m_mat_view(0, 3), m_mat_view(1, 3), m_mat_view(2, 3));
-    //m_mat_view = t_to_org * m_mat_view;
-    m_mat_view = mat_rot * m_mat_view;
-    //m_mat_view = t_from_org * m_mat_view;
-    
-
     if (m_is_darkmode) {
         glClearColor(0.1f, 0.1f, 0.1f, 0.0f); 
     } else {
@@ -218,4 +221,16 @@ bool Window::FrameStart()
 void Window::SwapBuffers()
 {
     glfwSwapBuffers(m_window);
+}
+
+
+void Window::MoveCameraPosFromCameraCoordinate(float dx, float dy, float dz)
+{
+    // dx, dy, dz are in camera coordinate
+    Matrix rot = Transform::RotateX(m_camera_angle[0]) * Transform::RotateY(m_camera_angle[1]);
+    Matrix trans = Transform::Translate(dx, dy, dz);
+    Matrix pos_in_world = rot.Transpose() * trans;  // use transpose instead of inverse, since rot is orthogonal matrix
+    m_camera_pos[0] += pos_in_world(0, 3);  // tx in world coordinate
+    m_camera_pos[1] += pos_in_world(1, 3);  // ty in world coordinate
+    m_camera_pos[2] += pos_in_world(2, 3);  // tz in world coordinate
 }

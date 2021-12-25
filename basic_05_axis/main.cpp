@@ -54,7 +54,8 @@ int main(int argc, char *argv[])
     glfwSetTime(0.0);
 
     Window my_window;
-    my_window.LookAt(Matrix(3, 1, { 2.0f, 2.0f, 2.0f }), Matrix(3, 1, { 2.0f, 2.0f, 2.0f }), Matrix(3, 1, { 0.0f, 1.0f, 0.0f }));
+    my_window.LookAt(Matrix(3, 1, { 2.0f, 2.0f, 2.0f }), Matrix(3, 1, { 0.0f, 0.0f, 0.0f }), Matrix(3, 1, { 0.0f, 1.0f, 0.0f }));
+    //my_window.LookAt(Matrix(3, 1, { 0.0f, 0.0f, 0.0f }), Matrix(3, 1, { 0.0f, 0.0f, -1.0f }), Matrix(3, 1, { 0.0f, 1.0f, 0.0f }));
     
     /* Create shape */
     std::unique_ptr<Shape> cube0(new ShapeSolid(CubeTriangleVertex));
