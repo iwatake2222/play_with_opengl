@@ -22,9 +22,10 @@ limitations under the License.
 #include <memory>
 #include <algorithm>
 
+#include "object_data.h"
+
 #include "shape.h"
 #include "transform.h"
-#include "object_data.h"
 
 /*** Macro ***/
 /* macro function */
@@ -130,34 +131,70 @@ Shape* CreateAxes(float size, float arrow_size, std::array<float, 3> color_x, st
     return new Shape(vertex_list);
 }
 
-Shape* CreateFlatObject(float width, float height, std::array<float, 3> color_front, std::array<float, 3> color_back)
+Shape* CreateFlatObject(float width, float height, float thickness, std::array<float, 3> color_front, std::array<float, 3> color_back)
 {
     std::vector<Object::Vertex> vertex_list;
-    const std::vector<std::array<float, 3>> base_vertex_list{
-        { 1.0f, -1.0f, 0.0f },
-        { -1.0f, 1.0f, 0.0f },
-        { -1.0f, -1.0f, 0.0f },
-        { 1.0f, -1.0f, 0.0f },
-        { 1.0f, 1.0f, 0.0f },
-        { -1.0f, 1.0f, 0.0f },
+    const std::vector<std::array<float, 3>> base_vertex_list {
+        /* front */
+        { -1.0f, -1.0f, 1.0f },
+        { 1.0f, -1.0f, 1.0f },
+        { 1.0f, 1.0f, 1.0f },
+        { -1.0f, -1.0f, 1.0f },
+        { 1.0f, 1.0f, 1.0f },
+        { -1.0f, 1.0f, 1.0f },
 
-        { 1.0f, -1.0f, 0.0f },
-        { -1.0f, -1.0f, 0.0f },
-        { -1.0f, 1.0f, 0.0f },
-        { 1.0f, -1.0f, 0.0f },
-        { -1.0f, 1.0f, 0.0f },
-        { 1.0f, 1.0f, 0.0f },
+        /* back */
+        { 1.0f, -1.0f, -1.0f },
+        { -1.0f, -1.0f, -1.0f },
+        { -1.0f, 1.0f, -1.0f },
+        { 1.0f, -1.0f, -1.0f },
+        { -1.0f, 1.0f, -1.0f },
+        { 1.0f, 1.0f, -1.0f },
+
+        { -1.0f, -1.0f, -1.0f },
+        { -1.0f, -1.0f, 1.0f },
+        { -1.0f, 1.0f, 1.0f },
+        { -1.0f, -1.0f, -1.0f },
+        { -1.0f, 1.0f, 1.0f },
+        { -1.0f, 1.0f, -1.0f },
+
+        { -1.0f, -1.0f, -1.0f },
+        { 1.0f, -1.0f, -1.0f },
+        { 1.0f, -1.0f, 1.0f },
+        { -1.0f, -1.0f, -1.0f },
+        { 1.0f, -1.0f, 1.0f },
+        { -1.0f, -1.0f, 1.0f },
+
+        { 1.0f, -1.0f, 1.0f },
+        { 1.0f, -1.0f, -1.0f },
+        { 1.0f, 1.0f, -1.0f },
+        { 1.0f, -1.0f, 1.0f },
+        { 1.0f, 1.0f, -1.0f },
+        { 1.0f, 1.0f, 1.0f },
+
+        { -1.0f, 1.0f, -1.0f },
+        { -1.0f, 1.0f, 1.0f },
+        { 1.0f, 1.0f, 1.0f },
+        { -1.0f, 1.0f, -1.0f },
+        { 1.0f, 1.0f, 1.0f },
+        { 1.0f, 1.0f, -1.0f },
     };
 
     /* front */
-    for (size_t i = 0; i < base_vertex_list.size() / 2; i++) {
+    for (size_t i = 0; i < 6; i++) {
         const auto& point = base_vertex_list[i];
-        vertex_list.push_back({ point[0] * width, point[1] * height, point[2], color_front[0], color_front[1], color_front[2] });
+        vertex_list.push_back({ point[0] * width, point[1] * height, point[2] * thickness, color_front[0], color_front[1], color_front[2] });
     }
     /* back */
-    for (size_t i = base_vertex_list.size() / 2; i < base_vertex_list.size(); i++) {
+    for (size_t i = 6; i < 12; i++) {
         const auto& point = base_vertex_list[i];
-        vertex_list.push_back({ point[0] * width, point[1] * height, point[2], color_back[0], color_back[1], color_back[2] });
+        vertex_list.push_back({ point[0] * width, point[1] * height, point[2] * thickness, color_back[0], color_back[1], color_back[2] });
+    }
+    /* other faces */
+    for (size_t i = 12; i < base_vertex_list.size(); i++) {
+        const auto& point = base_vertex_list[i];
+        vertex_list.push_back({ point[0] * width, point[1] * height, point[2] * thickness,
+            (color_front[0] + color_back[0]) / 2.0f, (color_front[1] + color_back[1]) / 2.0f, (color_front[2] + color_back[2]) / 2.0f });
     }
 
     return new ShapeSolid(vertex_list);

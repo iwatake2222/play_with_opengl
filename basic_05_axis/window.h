@@ -40,7 +40,7 @@ public:
     void LookAt(const std::array<float, 3>& eye, const std::array<float, 3>& gaze, const std::array<float, 3>& up);
     bool FrameStart();
     void SwapBuffers();
-    Matrix GetViewProjection(float fovy = 1.0f, float z_near = 1.0f, float z_far = 1000.0f);
+    Matrix GetViewProjection(float fovy = 1.0f, float z_near = 0.1f, float z_far = 1000.0f);
 
 private:
     void MoveCameraPosFromCameraCoordinate(float dx, float dy, float dz);

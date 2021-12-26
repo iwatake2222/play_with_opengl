@@ -16,6 +16,8 @@ limitations under the License.
 /* for general */
 #include <cstdint>
 #include <cstdio>
+#define _USE_MATH_DEFINES
+#include <cmath>
 #include <fstream> 
 #include <vector>
 #include <array>
@@ -40,10 +42,13 @@ limitations under the License.
     fprintf(stderr, "Error at %s:%d\n", __FILE__, __LINE__); \
     exit(1);                                                 \
   }
+static inline float Deg2Rad(float deg) { return static_cast<float>(deg * M_PI / 180.0); }
+static inline float Rad2Deg(float rad) { return static_cast<float>(rad * 180.0 / M_PI); }
 
 /* Setting */
 
 /*** Global variable ***/
+
 
 /*** Function ***/
 int main(int argc, char *argv[])
@@ -55,7 +60,7 @@ int main(int argc, char *argv[])
     glfwSetTime(0.0);
 
     Window my_window;
-    my_window.LookAt({ 2.0f, 2.0f, 2.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
+    my_window.LookAt({ 0.0f, 1.5f, 2.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
     
     /* Create shape */
     std::unique_ptr<Shape> cube0(new ShapeSolid(CubeTriangleVertex));
@@ -63,8 +68,8 @@ int main(int argc, char *argv[])
     
     std::unique_ptr<Shape> ground(CreateGround(10.0f, 1.0f));
     std::unique_ptr<Shape> axes(CreateAxes(1.5f, 0.2f, { 1.0f, 0.4f, 0.4f }, { 0.4f, 1.0f, 0.4f }, { 0.4f, 0.4f, 1.0f }));
-    std::unique_ptr<Shape> object_axes(CreateAxes(1.0f, 0.2f, { 0.8f, 0.0f, 0.0f }, { 0.0f, 0.8f, 0.0f }, { 0.0f, 0.0f, 0.8f }));
-    std::unique_ptr<Shape> object(CreateFlatObject(0.5f, 0.8f, { 0.3f, 0.75f, 1.0f }, { 0.5f, 0.5f, 0.5f }));
+    std::unique_ptr<Shape> object_axes(CreateAxes(1.0f, 0.1f, { 0.8f, 0.0f, 0.0f }, { 0.0f, 0.8f, 0.0f }, { 0.0f, 0.0f, 0.8f }));
+    std::unique_ptr<Shape> object(CreateFlatObject(0.5f, 0.8f, 0.01f, { 0.3f, 0.75f, 1.0f }, { 0.5f, 0.5f, 0.5f }));
 
     /*** Start loop ***/
     while (1) {
@@ -78,8 +83,10 @@ int main(int argc, char *argv[])
         Matrix model = Matrix::Identity(4);
         model = Transform::Rotate(static_cast<GLfloat>(glfwGetTime()), 0.0f, 1.0f, 0.0f);
         object->Draw(my_window.GetViewProjection(), model);
-        glLineWidth(5.0f);
+        glLineWidth(10.0f);
+        //glDisable(GL_DEPTH_TEST);
         object_axes->Draw(my_window.GetViewProjection(), model);
+        //glEnable(GL_DEPTH_TEST);
 
         glLineWidth(1.0f);
         const Matrix r = Transform::Rotate(static_cast<GLfloat>(glfwGetTime()), 0.0f, 1.0f, 0.0f);
