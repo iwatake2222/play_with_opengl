@@ -15,6 +15,10 @@ limitations under the License.
 #ifndef TRANSFORM_H
 #define TRANSFORM_H
 
+#include <cstdint>
+#include <cstdio>
+#include <vector>
+#include <array>
 #include "matrix.h"
 
 namespace Transform
@@ -29,7 +33,7 @@ namespace Transform
         float eye_x, float eye_y, float eye_z,
         float gaze_x, float gaze_y, float gaze_z,
         float up_x, float up_y, float up_z);
-    Matrix LookAt(const Matrix& eye, const Matrix& gaze, const Matrix& up);
+    Matrix LookAt(const std::array<float, 3>& eye, const std::array<float, 3>& gaze, const std::array<float, 3>& up);
 }
 
 namespace Projection {

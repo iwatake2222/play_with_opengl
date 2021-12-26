@@ -18,11 +18,13 @@ limitations under the License.
 #include <cstdio>
 #include <fstream> 
 #include <vector>
+#include <array>
 #include <string>
 #include <memory>
 #include <algorithm>
 
 #include "window.h"
+#include "matrix.h"
 #include "transform.h"
 
 /*** Macro ***/
@@ -78,8 +80,8 @@ void Window::CbKeyboard(GLFWwindow* window, int32_t key, int32_t scancode, int32
 Matrix Window::GetViewProjection(float fovy, float z_near, float z_far)
 {
     Matrix view = Matrix::Identity(4);
-    view = Transform::Translate(-m_camera_pos[0], -m_camera_pos[1], -m_camera_pos[2]);  /* move to origin */
-    view = Transform::RotateX(m_camera_angle[0]) * Transform::RotateY(m_camera_angle[1]) * view; /* rotate*/
+    view = Transform::Translate(-m_camera_pos[0], -m_camera_pos[1], -m_camera_pos[2]) * view;  /* move to origin */
+    view = Transform::RotateX(m_camera_angle[0]) * Transform::RotateY(m_camera_angle[1]) * Transform::RotateZ(m_camera_angle[2]) * view; /* rotate*/
     const float aspect = static_cast<float>(m_width) / m_height;
     const Matrix projection = Projection::Perspective(fovy, aspect, z_near, z_far);
     return projection * view;
@@ -91,8 +93,8 @@ Window::Window(int32_t width, int32_t height, const char* title)
     m_width = width;
     m_height = height;
     m_is_darkmode = true;
-    std::fill(m_camera_pos, m_camera_pos + 3, 0);
-    std::fill(m_camera_angle, m_camera_angle + 3, 0);
+    std::fill(m_camera_pos.begin(), m_camera_pos.end(), 0.0f);
+    std::fill(m_camera_angle.begin(), m_camera_angle.end(), 0.0f);
 
     /* Create a window (x4 anti-aliasing, OpenGL3.3 Core Profile)*/
     glfwWindowHint(GLFW_SAMPLES, 4);
@@ -142,14 +144,19 @@ Window::~Window()
     glfwDestroyWindow(m_window);
 }
 
-void Window::LookAt(const Matrix& eye, const Matrix& gaze, const Matrix& up)
+void Window::LookAt(const std::array<float, 3>& eye, const std::array<float, 3>& gaze, const std::array<float, 3>& up)
 {
-    // todo
-    //Matrix view = Transform::LookAt(eye, gaze, up);
-    std::copy(eye.Data(), eye.Data() + 3, m_camera_pos);
-    m_camera_angle[0] = 0.5;
-    m_camera_angle[1] = -0.5;
-    //m_camera_angle[2] = -0.5;
+    /* Store XYZ angles instead or rotation matrix */
+    Matrix mat = Transform::LookAt(eye, gaze, up);
+    std::copy(eye.begin(), eye.end(), m_camera_pos.begin());
+    m_camera_angle[1] = std::asin(mat(0, 2));
+    if (std::cos(m_camera_angle[1]) != 0) {
+        m_camera_angle[0] = std::atan(-mat(1, 2) / mat(2, 2));
+        m_camera_angle[2] = std::atan(-mat(0, 1) / mat(0, 0));
+    } else {
+        m_camera_angle[0] = std::atan(mat(2, 1) / mat(1, 1));
+        m_camera_angle[2] = 0;
+    }
 }
 
 bool Window::FrameStart()

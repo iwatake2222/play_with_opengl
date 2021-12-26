@@ -20,6 +20,7 @@ limitations under the License.
 #include <cstdint>
 #include <cstdio>
 #include <vector>
+#include <array>
 
 /* for GLFW */
 #include <GL/glew.h>     /* this must be before including glfw*/
@@ -36,7 +37,7 @@ private:
 public:
     Window(int32_t width = 720, int32_t height = 480, const char* title = "test");
     ~Window();
-    void LookAt(const Matrix& eye, const Matrix& gaze, const Matrix& up);
+    void LookAt(const std::array<float, 3>& eye, const std::array<float, 3>& gaze, const std::array<float, 3>& up);
     bool FrameStart();
     void SwapBuffers();
     Matrix GetViewProjection(float fovy = 1.0f, float z_near = 1.0f, float z_far = 1000.0f);
@@ -49,10 +50,8 @@ private:
     GLFWwindow* m_window;
     int32_t m_width;
     int32_t m_height;
-    Matrix m_mat_view;       // 4 x 4
-
-    float m_camera_pos[3];  // in world coordinate
-    float m_camera_angle[3];
+    std::array<float, 3> m_camera_pos;  // in world coordinate
+    std::array<float, 3> m_camera_angle;
 
     double m_last_time;
     double m_last_mouse_x;

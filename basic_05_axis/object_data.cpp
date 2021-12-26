@@ -40,7 +40,7 @@ limitations under the License.
 
 
 /*** Function ***/
-Shape* CreateGround(float size, float interval, std::vector<float> color_vec3)
+Shape* CreateGround(float size, float interval, std::array<float, 3> color_vec3)
 {
     GLuint index = 0;
     std::vector<Object::Vertex> vertex_list;
@@ -60,9 +60,9 @@ Shape* CreateGround(float size, float interval, std::vector<float> color_vec3)
     return new ShapeIndex(vertex_list, index_list);
 }
 
-std::vector<std::vector<float>> CreateArrowZVertexList(float size, float arrow_size)
+std::vector<std::array<float, 3>> CreateArrowZVertexList(float size, float arrow_size)
 {
-    std::vector<std::vector<float>> vertex_list;
+    std::vector<std::array<float, 3>> vertex_list;
     vertex_list.push_back({ 0.0f, 0.0f, -size });
     vertex_list.push_back({ 0.0f, 0.0f, size });
 
@@ -94,7 +94,7 @@ std::vector<std::vector<float>> CreateArrowZVertexList(float size, float arrow_s
 }
 
 
-std::vector<Object::Vertex> CreateArrowZVertexList(float size, float arrow_size, std::vector<float> color_vec3)
+std::vector<Object::Vertex> CreateArrowZVertexList(float size, float arrow_size, std::array<float, 3> color_vec3)
 {
     const auto point_list = CreateArrowZVertexList(size, arrow_size);
     std::vector<Object::Vertex> vertex_list;
@@ -105,12 +105,12 @@ std::vector<Object::Vertex> CreateArrowZVertexList(float size, float arrow_size,
 }
 
 
-Shape* CreateArrowZ(float size, float arrow_size, std::vector<float> color_vec3)
+Shape* CreateArrowZ(float size, float arrow_size, std::array<float, 3> color_vec3)
 {
     return new Shape(CreateArrowZVertexList(size, arrow_size, color_vec3));
 }
 
-Shape* CreateAxes(float size, float arrow_size, std::vector<float> color_x, std::vector<float> color_y, std::vector<float> color_z)
+Shape* CreateAxes(float size, float arrow_size, std::array<float, 3> color_x, std::array<float, 3> color_y, std::array<float, 3> color_z)
 {
     const auto point_list = CreateArrowZVertexList(size, arrow_size);
     std::vector<Object::Vertex> vertex_list;
@@ -130,10 +130,10 @@ Shape* CreateAxes(float size, float arrow_size, std::vector<float> color_x, std:
     return new Shape(vertex_list);
 }
 
-Shape* CreateFlatObject(float width, float height, std::vector<float> color_front, std::vector<float> color_back)
+Shape* CreateFlatObject(float width, float height, std::array<float, 3> color_front, std::array<float, 3> color_back)
 {
     std::vector<Object::Vertex> vertex_list;
-    const std::vector<std::vector<float>> base_vertex_list{
+    const std::vector<std::array<float, 3>> base_vertex_list{
         { 1.0f, -1.0f, 0.0f },
         { -1.0f, 1.0f, 0.0f },
         { -1.0f, -1.0f, 0.0f },
@@ -150,12 +150,12 @@ Shape* CreateFlatObject(float width, float height, std::vector<float> color_fron
     };
 
     /* front */
-    for (int32_t i = 0; i < base_vertex_list.size() / 2; i++) {
+    for (size_t i = 0; i < base_vertex_list.size() / 2; i++) {
         const auto& point = base_vertex_list[i];
         vertex_list.push_back({ point[0] * width, point[1] * height, point[2], color_front[0], color_front[1], color_front[2] });
     }
     /* back */
-    for (int32_t i = base_vertex_list.size() / 2; i < base_vertex_list.size(); i++) {
+    for (size_t i = base_vertex_list.size() / 2; i < base_vertex_list.size(); i++) {
         const auto& point = base_vertex_list[i];
         vertex_list.push_back({ point[0] * width, point[1] * height, point[2], color_back[0], color_back[1], color_back[2] });
     }

@@ -139,7 +139,7 @@ Matrix Transform::LookAt(
     return rv * tv;
 }
 
-Matrix Transform::LookAt(const Matrix& eye, const Matrix& gaze, const Matrix& up)
+Matrix Transform::LookAt(const std::array<float, 3>& eye, const std::array<float, 3>& gaze, const std::array<float, 3>& up)
 {
     return Transform::LookAt(eye[0], eye[1], eye[2], gaze[0], gaze[1], gaze[2], up[0], up[1], up[2]);
 }

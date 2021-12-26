@@ -18,6 +18,7 @@ limitations under the License.
 #include <cstdio>
 #include <fstream> 
 #include <vector>
+#include <array>
 #include <string>
 #include <memory>
 #include <algorithm>
@@ -54,8 +55,7 @@ int main(int argc, char *argv[])
     glfwSetTime(0.0);
 
     Window my_window;
-    my_window.LookAt(Matrix(3, 1, { 2.0f, 2.0f, 2.0f }), Matrix(3, 1, { 0.0f, 0.0f, 0.0f }), Matrix(3, 1, { 0.0f, 1.0f, 0.0f }));
-    //my_window.LookAt(Matrix(3, 1, { 0.0f, 0.0f, 0.0f }), Matrix(3, 1, { 0.0f, 0.0f, -1.0f }), Matrix(3, 1, { 0.0f, 1.0f, 0.0f }));
+    my_window.LookAt({ 2.0f, 2.0f, 2.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
     
     /* Create shape */
     std::unique_ptr<Shape> cube0(new ShapeSolid(CubeTriangleVertex));
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     std::unique_ptr<Shape> ground(CreateGround(10.0f, 1.0f));
     std::unique_ptr<Shape> axes(CreateAxes(1.5f, 0.2f, { 1.0f, 0.4f, 0.4f }, { 0.4f, 1.0f, 0.4f }, { 0.4f, 0.4f, 1.0f }));
     std::unique_ptr<Shape> object_axes(CreateAxes(1.0f, 0.2f, { 0.8f, 0.0f, 0.0f }, { 0.0f, 0.8f, 0.0f }, { 0.0f, 0.0f, 0.8f }));
-    std::unique_ptr<Shape> object(CreateFlatObject(0.5f, 0.8f, { 0.3f, 0.75f, 1.0f }, { 0.6f, 0.0f, 0.6f }));
+    std::unique_ptr<Shape> object(CreateFlatObject(0.5f, 0.8f, { 0.3f, 0.75f, 1.0f }, { 0.5f, 0.5f, 0.5f }));
 
     /*** Start loop ***/
     while (1) {
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
         Matrix model = Matrix::Identity(4);
         model = Transform::Rotate(static_cast<GLfloat>(glfwGetTime()), 0.0f, 1.0f, 0.0f);
         object->Draw(my_window.GetViewProjection(), model);
-        glLineWidth(4.0f);
+        glLineWidth(5.0f);
         object_axes->Draw(my_window.GetViewProjection(), model);
 
         glLineWidth(1.0f);
